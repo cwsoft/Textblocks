@@ -1,0 +1,112 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net48</TargetFramework>
+		<LangVersion>10.0</LangVersion>
+		<Nullable>enable</Nullable>
+
+		<UseWindowsForms>true</UseWindowsForms>
+		<RootNamespace>cwsoft.Textblocks</RootNamespace>
+		<StartupObject>cwsoft.Textblocks.Program</StartupObject>
+		<ApplicationIcon>Gui\favicon.ico</ApplicationIcon>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<EnableNETAnalyzers>True</EnableNETAnalyzers>
+		<AnalysisLevel>latest</AnalysisLevel>
+		<PlatformTarget>AnyCPU</PlatformTarget>
+		<NeutralLanguage>en</NeutralLanguage>
+		<DebugType>none</DebugType>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<Optimize>true</Optimize>
+		<PlatformTarget>AnyCPU</PlatformTarget>
+		<WarningLevel>5</WarningLevel>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<WarningLevel>5</WarningLevel>
+	</PropertyGroup>
+
+	<!-- Include Textblocks assets resources -->
+	<ItemGroup>
+		<Resource Include="Assets\favicon.ico" />
+		<Resource Include="Assets\textblocks.png" />
+	</ItemGroup>
+
+	<!-- Include Textblocks LICENSE file from Github repository to build folder -->
+	<ItemGroup>
+		<ContentWithTargetPath Include="..\LICENSE.txt">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<TargetPath>%(Filename)%(Extension)</TargetPath>
+		</ContentWithTargetPath>
+	</ItemGroup>
+
+	<!-- Include Textblocks documentation from Github repository to build folder -->
+	<ItemGroup>
+		<ContentWithTargetPath Include="..\Dokumentation\Textblocks.pdf">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<TargetPath>%(Filename)%(Extension)</TargetPath>
+		</ContentWithTargetPath>
+	</ItemGroup>
+
+	<!-- Include optional Textblocks Word catalogs from Github repository to build folder -->
+	<ItemGroup>
+		<ContentWithTargetPath Include="..\Kataloge\*.docx">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<TargetPath>Kataloge\%(Filename)%(Extension)</TargetPath>
+		</ContentWithTargetPath>
+	</ItemGroup>
+
+	<!-- Include optional Textblocks catalogs from Github repository to build folder -->
+	<ItemGroup>
+		<ContentWithTargetPath Include="..\Kataloge\*.tbc">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<TargetPath>Kataloge\%(Filename)%(Extension)</TargetPath>
+		</ContentWithTargetPath>
+	</ItemGroup>
+
+	<!-- Embed Interop Word DLL to final assembly (copy Dll or adapt path to match your location) -->
+	<ItemGroup>
+		<Reference Include="Microsoft.Office.Interop.Word">
+			<HintPath>.\PIA\Microsoft.Office.Interop.Word.dll</HintPath>
+			<EmbedInteropTypes>true</EmbedInteropTypes>
+			<Private>true</Private>
+			<SpecificVersion>false</SpecificVersion>
+		</Reference>
+	</ItemGroup>
+
+	<!-- Include package references for NET framework 4.8 -->
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
+		<Reference Include="Microsoft.CSharp" />
+	</ItemGroup>
+
+	<!-- Auto generate Resources and Settings files -->
+	<ItemGroup>
+		<Compile Update="Properties\Resources.Designer.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Resources.resx</DependentUpon>
+		</Compile>
+		<Compile Update="Properties\Settings.Designer.cs">
+			<DesignTimeSharedInput>True</DesignTimeSharedInput>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Settings.settings</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Update="Properties\Resources.resx">
+			<Generator>ResXFileCodeGenerator</Generator>
+			<LastGenOutput>Resources.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="Properties\Settings.settings">
+			<Generator>SettingsSingleFileGenerator</Generator>
+			<LastGenOutput>Settings.Designer.cs</LastGenOutput>
+		</None>
+	</ItemGroup>
+</Project>
