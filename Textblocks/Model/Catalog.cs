@@ -45,16 +45,15 @@ internal class Catalog: IDisposable
    #endregion
 
    #region // Public API
-   // Returns true if catalog document (*.docx) exists and matches filename pattern, otherwise false.
-   public static bool IsDocumentFileValid(string fileName) => File.Exists(fileName)
-      && Path.GetFileName(fileName).StartsWith("Textblocks_Katalog", StringComparison.OrdinalIgnoreCase)
+   // Returns true if catalog document (*.docx) exists, otherwise false.
+   public static bool IsValidDocumentFile(string fileName) => File.Exists(fileName)
       && Path.GetExtension(fileName).EndsWith(".docx", StringComparison.OrdinalIgnoreCase);
 
    // Open specified catalog document (*.docx) in MS Word if not already open.
    public bool OpenCatalog(string fileName = "", bool allowCatalogSelection = true)
    {
       // Let user select a valid catalog document (*.docx) if given filename is invalid.
-      if (allowCatalogSelection && !IsDocumentFileValid(fileName)) {
+      if (allowCatalogSelection && !IsValidDocumentFile(fileName)) {
          fileName = SelectCatalogDocumentFile();
       }
 
@@ -160,18 +159,18 @@ internal class Catalog: IDisposable
          CheckFileExists = true,
          ReadOnlyChecked = true,
          DefaultExt = ".docx",
-         Filter = "|Textblocks_Katalog*.docx"
+         Filter = "Textblock Katalog|*.docx"
       };
 
       string documentFile = (dialog.ShowDialog() == DialogResult.OK) ? dialog.FileName : string.Empty;
-      return IsDocumentFileValid(documentFile) ? documentFile : string.Empty;
+      return IsValidDocumentFile(documentFile) ? documentFile : string.Empty;
    }
 
    // Validate catalog document filename and set internal catalog pathes (.docx, .tbc). 
    // Returns true if filename is valid and pathes are set, otherwise false.
    private bool SetValidatedCatalogPathes(string fileName)
    {
-      if (IsDocumentFileValid(fileName)) {
+      if (IsValidDocumentFile(fileName)) {
          DocumentFile = Path.GetFullPath(fileName);
          CatalogFile = $@"{Path.GetDirectoryName(DocumentFile)}" + $@"\{Path.GetFileNameWithoutExtension(DocumentFile)}.tbc";
          return true;
