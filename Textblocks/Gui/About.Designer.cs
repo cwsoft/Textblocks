@@ -29,7 +29,7 @@ partial class About
    {
          System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(About));
          this.label1 = new System.Windows.Forms.Label();
-         this.label3 = new System.Windows.Forms.Label();
+         this.LblDescription = new System.Windows.Forms.Label();
          this.pictureBox1 = new System.Windows.Forms.PictureBox();
          this.label8 = new System.Windows.Forms.Label();
          this.label6 = new System.Windows.Forms.Label();
@@ -53,14 +53,14 @@ partial class About
          this.label1.TabIndex = 5;
          this.label1.Text = "Textblocks";
          // 
-         // label3
+         // LblDescription
          // 
-         this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-         this.label3.Location = new System.Drawing.Point(107, 59);
-         this.label3.Name = "label3";
-         this.label3.Size = new System.Drawing.Size(458, 92);
-         this.label3.TabIndex = 7;
-         this.label3.Text = resources.GetString("label3.Text");
+         this.LblDescription.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+         this.LblDescription.Location = new System.Drawing.Point(107, 50);
+         this.LblDescription.Name = "LblDescription";
+         this.LblDescription.Size = new System.Drawing.Size(448, 81);
+         this.LblDescription.TabIndex = 7;
+         this.LblDescription.Text = resources.GetString("LblDescription.Text");
          // 
          // pictureBox1
          // 
@@ -77,18 +77,18 @@ partial class About
          this.label8.AutoSize = true;
          this.label8.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.label8.ForeColor = System.Drawing.Color.Black;
-         this.label8.Location = new System.Drawing.Point(104, 178);
+         this.label8.Location = new System.Drawing.Point(104, 144);
          this.label8.Name = "label8";
-         this.label8.Size = new System.Drawing.Size(168, 15);
+         this.label8.Size = new System.Drawing.Size(197, 15);
          this.label8.TabIndex = 101;
-         this.label8.Text = "Christian Sommer (cwsoft.de)";
+         this.label8.Text = "Christian Sommer (http://cwsoft.de)";
          // 
          // label6
          // 
          this.label6.AutoSize = true;
          this.label6.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.label6.ForeColor = System.Drawing.Color.Black;
-         this.label6.Location = new System.Drawing.Point(10, 197);
+         this.label6.Location = new System.Drawing.Point(10, 163);
          this.label6.Name = "label6";
          this.label6.Size = new System.Drawing.Size(46, 15);
          this.label6.TabIndex = 100;
@@ -98,7 +98,7 @@ partial class About
          // 
          this.label5.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.label5.ForeColor = System.Drawing.Color.DarkBlue;
-         this.label5.Location = new System.Drawing.Point(7, 223);
+         this.label5.Location = new System.Drawing.Point(7, 189);
          this.label5.Name = "label5";
          this.label5.Size = new System.Drawing.Size(558, 35);
          this.label5.TabIndex = 99;
@@ -111,7 +111,7 @@ partial class About
          this.label4.AutoSize = true;
          this.label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.label4.ForeColor = System.Drawing.Color.Black;
-         this.label4.Location = new System.Drawing.Point(10, 178);
+         this.label4.Location = new System.Drawing.Point(10, 144);
          this.label4.Name = "label4";
          this.label4.Size = new System.Drawing.Size(38, 15);
          this.label4.TabIndex = 98;
@@ -134,7 +134,7 @@ partial class About
          this.LblReleaseDate.AutoSize = true;
          this.LblReleaseDate.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.LblReleaseDate.ForeColor = System.Drawing.Color.Black;
-         this.LblReleaseDate.Location = new System.Drawing.Point(104, 159);
+         this.LblReleaseDate.Location = new System.Drawing.Point(104, 125);
          this.LblReleaseDate.Name = "LblReleaseDate";
          this.LblReleaseDate.Size = new System.Drawing.Size(11, 15);
          this.LblReleaseDate.TabIndex = 105;
@@ -145,7 +145,7 @@ partial class About
          this.label7.AutoSize = true;
          this.label7.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.label7.ForeColor = System.Drawing.Color.Black;
-         this.label7.Location = new System.Drawing.Point(10, 159);
+         this.label7.Location = new System.Drawing.Point(10, 125);
          this.label7.Name = "label7";
          this.label7.Size = new System.Drawing.Size(80, 15);
          this.label7.TabIndex = 104;
@@ -156,7 +156,7 @@ partial class About
          this.label2.AutoSize = true;
          this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.label2.ForeColor = System.Drawing.Color.Black;
-         this.label2.Location = new System.Drawing.Point(104, 197);
+         this.label2.Location = new System.Drawing.Point(104, 163);
          this.label2.Name = "label2";
          this.label2.Size = new System.Drawing.Size(226, 15);
          this.label2.TabIndex = 106;
@@ -166,7 +166,7 @@ partial class About
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-         this.ClientSize = new System.Drawing.Size(569, 260);
+         this.ClientSize = new System.Drawing.Size(555, 229);
          this.Controls.Add(this.label2);
          this.Controls.Add(this.LblReleaseDate);
          this.Controls.Add(this.label7);
@@ -176,7 +176,7 @@ partial class About
          this.Controls.Add(this.label5);
          this.Controls.Add(this.label4);
          this.Controls.Add(this.pictureBox1);
-         this.Controls.Add(this.label3);
+         this.Controls.Add(this.LblDescription);
          this.Controls.Add(this.label1);
          this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Fixed3D;
          this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -198,7 +198,7 @@ partial class About
    #endregion
 
    private System.Windows.Forms.Label label1;
-   private System.Windows.Forms.Label label3;
+   private System.Windows.Forms.Label LblDescription;
    private System.Windows.Forms.PictureBox pictureBox1;
    private System.Windows.Forms.Label label8;
    private System.Windows.Forms.Label label6;

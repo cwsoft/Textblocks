@@ -117,9 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="label3.Text" xml:space="preserve">
-    <value>Textblocks ist eine einfache Textbaustein-Verwaltung auf Grundlage von MS Word. 
-Textbausteine werden in MS Word erstellt und in Katalogen (*.docx) gespeichert. Textblocks extrahiert die Informationen und zeigt die enthaltenen Kategorien und Textbausteine in einer Vorschau an. Suchfilter erlauben das schnelle Auffinden einzelner Textbausteine. Der angezeigte Textbaustein kann mit STRG+V in der ursprünglichen Formatierung in ein beliebiges Word-Dokument kopiert werden.</value>
+  <data name="LblDescription.Text" xml:space="preserve">
+    <value>Textblocks ist eine Textbaustein-Verwaltung für MS-Word. Die Textbausteine werden in MS-Word erstellt, formatiert und in Katalogdateien (.docx) gespeichert. Bausteintexte können durchsucht, gefiltert, als Vorschau angezeigt und mit STRG+V im Original-Layout in andere Word-Dateien kopiert werden.
+</value>
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
