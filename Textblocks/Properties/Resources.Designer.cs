@@ -61,7 +61,7 @@ namespace cwsoft.Textblocks.Properties {
         }
         
         /// <summary>
-        ///   Sucht eine lokalisierte Zeichenfolge, die 01.05.2022 ähnelt.
+        ///   Sucht eine lokalisierte Zeichenfolge, die 05.05.2022 ähnelt.
         /// </summary>
         internal static string AppReleaseDate {
             get {
