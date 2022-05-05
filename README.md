@@ -12,7 +12,8 @@ Textblocks spielt seine Stärke vor allem da aus, wo große Word-Dokumente nach 
 - **Für Selbst-Kompilierer:**
   - [Office PIA](./Textblocks/PIA/Howto-Office-PIA.md) `Microsoft.Office.Interop.Word.dll`
   - MS Visual Studio (oder kompatiblen C#-Compiler) 
-  - Textblocks lässt sich ohne Anpassung für NET Framework 4.8 bis Net 6 kompilieren
+  - Textblocks ist ohne Code-Änderungen für NET Framework 4.8 bis Net 6 kompilierbar
+  - Ziel-Framework in `Textblocks.csproj`: `<TargetFramework>net48|net6.0-windows</TargetFramework>` 
   - Zum Teil werden kompatible Sprachfeatures bis einschließlich C# 10 genutzt
 
 ## Aufbau der Katalogdateien
@@ -23,7 +24,7 @@ Sofern über die erweiterten Eigenschaften der jeweiligen Word-Katalogdatei: `MS
 - **textblockStyleName**: `tb_Textblock`
 
 ## Lizenz
-`Textblocks` wurde vom Autor im Oktober 2018 als rein privates Projekt gestartet und im Mai 2022 unter der [GNU General Public License](./LICENSE.txt) (Version 3) auf GitHub für Interessierte zur Verfügung gestellt. 
+Textblocks wurde vom Autor im Oktober 2018 als rein privates Projekt gestartet und im Mai 2022 unter der [GNU General Public License](./LICENSE.txt) (Version 3) auf GitHub für Interessierte zur Verfügung gestellt. 
 
 Viel Spaß
 cwsoft
