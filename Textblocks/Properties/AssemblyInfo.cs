@@ -4,12 +4,12 @@ using System.Runtime.InteropServices;
 // Allgemeine Informationen über eine Assembly werden über die folgenden
 // Attribute gesteuert. Ändern Sie diese Attributwerte, um die Informationen zu ändern,
 // die einer Assembly zugeordnet sind.
-[assembly: AssemblyTitle("Textblocks2")]
-[assembly: AssemblyDescription("Einfache und intuitive Textbausteinverwaltung für MS Word.")]
+[assembly: AssemblyTitle("Textblocks")]
+[assembly: AssemblyDescription("Textbausteinverwaltung für MS Word.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("cwsoft")]
-[assembly: AssemblyProduct("Textblocks2")]
-[assembly: AssemblyCopyright("Copyright ©  2020")]
+[assembly: AssemblyProduct("Textblocks")]
+[assembly: AssemblyCopyright("Copyright © 2018-2022 C. Sommer")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
