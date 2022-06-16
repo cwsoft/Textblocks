@@ -20,7 +20,7 @@ internal class Catalog: IDisposable
    // Properties.
    public string DocumentFile { get; private set; } = string.Empty;
    public string CatalogFile { get; private set; } = string.Empty;
-   public bool WordInstanceExists => _wordApp.InstanceExists;
+   public bool WordInstanceExists => _wordApp.IsInitialized();
    public List<Textblock> Textblocks { get; private set; } = new();
    public List<Category> Categories { get; private set; } = new();
 
@@ -63,7 +63,7 @@ internal class Catalog: IDisposable
       }
 
       // Check if catalog document is already opened in MS Word.
-      if (_wordApp.DocumentAlreadyOpen(DocumentFile) && MessageBox.Show(
+      if (_wordApp.IsDocumentOpen(DocumentFile) && MessageBox.Show(
          "Die Katalogdatei ist bereits geladen.\nMöchten Sie die Katalogdatei erneut laden?",
          "Katalogdatei (*.docx) bereits geladen",
          MessageBoxButtons.YesNo,
@@ -86,7 +86,7 @@ internal class Catalog: IDisposable
       ResetCatalog();
 
       // Only proceed if corresponding catalog document (*.docx) is opened in MS Word.
-      if (!(_wordApp.DocumentAlreadyOpen(fileName: DocumentFile))) {
+      if (!(_wordApp.IsDocumentOpen(fileName: DocumentFile))) {
          return false;
       }
 
@@ -130,11 +130,10 @@ internal class Catalog: IDisposable
    // Returns MS Word document range of given textblock or null.
    public MSWord.Range? GetTextblockDocumentRange(Textblock textblock)
    {
-      if (textblock is null || _wordApp.Document is null) {
+      if (textblock is null) {
          return null;
       }
-
-      return _wordApp.Document.Range(textblock.RngStartPos, textblock.RngEndPos);
+      return _wordApp.GetRangeOrDefault(textblock.RngStartPos, textblock.RngEndPos);
    }
    #endregion
 
@@ -189,7 +188,7 @@ internal class Catalog: IDisposable
       string textblockStyleName = _wordApp.GetDocumentProperty("textblockStyleName", Properties.Resources.DefaultTextblockStyleName);
 
       // Extract catalog data.
-      (int nbrCategories, int nbrTextblocks, int documentEnd) = (0, 0, _wordApp.Document?.Content?.End ?? -1);
+      (int nbrCategories, int nbrTextblocks, int documentEnd) = (0, 0, _wordApp.ActiveDocument?.Content?.End ?? -1);
       foreach (MSWord.Range? rng in _wordApp.GetRangesByStyleName(textblockStyleName)) {
          if (rng is null) {
             return false;
@@ -221,7 +220,7 @@ internal class Catalog: IDisposable
 
             Textblocks[nbrTextblocks - 1].RngEndPos = previousTextblockEnd;
             Textblocks[nbrTextblocks - 1].Content =
-               _wordApp.Document?.Range(Textblocks[nbrTextblocks - 1].RngStartPos, previousTextblockEnd).Text ?? string.Empty;
+               _wordApp.ActiveDocument?.Range(Textblocks[nbrTextblocks - 1].RngStartPos, previousTextblockEnd).Text ?? string.Empty;
          }
 
          // Add all available information of actual textblock.
@@ -237,7 +236,7 @@ internal class Catalog: IDisposable
       if (Textblocks.Count > 0) {
          Textblocks[nbrTextblocks - 1].RngEndPos = documentEnd;
          Textblocks[nbrTextblocks - 1].Content =
-            _wordApp.Document?.Range(Textblocks[nbrTextblocks - 1].RngStartPos, documentEnd).Text ?? string.Empty;
+            _wordApp.ActiveDocument?.Range(Textblocks[nbrTextblocks - 1].RngStartPos, documentEnd).Text ?? string.Empty;
       }
 
       // Add number of available textblocks for each category.

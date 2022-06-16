@@ -41,7 +41,7 @@ public partial class App: Form
       Helper.WordApp? wordApp = null;
       using (new Helper.BlockingTask(Rtb_Preview, "Baue Verbindung zu MS Word auf ... bitte warten")) {
          wordApp = new(visible: false);
-         if (!wordApp.InstanceExists) {
+         if (!wordApp.IsInitialized()) {
             ShutdownApp();
          }
       }

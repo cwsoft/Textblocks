@@ -5,8 +5,7 @@ using MSWord = Microsoft.Office.Interop.Word;
 
 namespace cwsoft.Textblocks.Helper;
 
-// Wrapper to automate some basic MS Word tasks using Office Interop services.
-// Note: At any time only one active Word document (*.docx) can be opened.
+// Microsoft Word wrapper to automate some tasks using Office Interop services.
 internal class WordApp: IDisposable
 {
    #region // Fields, Properties, Constructors
@@ -14,109 +13,99 @@ internal class WordApp: IDisposable
    private MSWord.Application? _wordApp = null;
 
    // Public properties.
-   public MSWord.Document? Document { get; private set; } = null;
-
-   // Returns true if MS Word instance exists, otherwise false.
-   public bool InstanceExists {
-      get {
-         try {
-            return !string.IsNullOrWhiteSpace(_wordApp?.Version);
-         }
-         catch (System.Runtime.InteropServices.COMException) {
-            return false;
-         }
-      }
-   }
+   public MSWord.Document? ActiveDocument { get; private set; } = null;
 
    // Constructor.
-   public WordApp(bool visible = false) => CreateInstanceIfNotExists(visible);
+   public WordApp(bool visible = false) => Initialize(visible);
    #endregion
 
    #region // Public API
-   // Returns true if specified document is already opened.
-   public bool DocumentAlreadyOpen(string fileName) =>
-      string.Compare(Document?.FullName ?? string.Empty, fileName, ignoreCase: true) == 0;
-
-   // Returns true if specified Word document was opened, otherwise false.
-   // Closes any possible open document to ensure only one document is open at any time.
+   // Returns true if specified document could be opened, otherwise false.
    public bool OpenDocument(string fileName, bool visible = false, bool readOnly = true)
    {
-      // Ensure MS Word connection exists.
-      if (!CreateInstanceIfNotExists()) {
+      // Ensure Interop service runs and word object is initialized.
+      if (!Initialize()) {
          return false;
       }
 
-      // Close possible open document so we have only one open document at any time.
+      // Close actual document so we have only one document open at any time.
+      _ = CloseDocument(saveChanges: false);
+
+      // Try to open the specified document.
       try {
-         _ = CloseDocument(saveChanges: false);
-         Document = _wordApp?.Documents.Open(FileName: fileName, ReadOnly: readOnly, Visible: visible);
-         return string.Compare(Document?.FullName ?? string.Empty, fileName, ignoreCase: true) == 0;
+         ActiveDocument = _wordApp?.Documents.Open(FileName: fileName, ReadOnly: readOnly, Visible: visible);
+         return string.Compare(ActiveDocument?.FullName ?? string.Empty, fileName, ignoreCase: true) == 0;
       }
       catch (System.Runtime.InteropServices.COMException) {
          return false;
       }
    }
 
-   // Close actual opened MS Word document if exist.
+   // Closes the actual opened document and returns true on success, otherwise false.
    public bool CloseDocument(bool saveChanges = false)
    {
       try {
-         Document?.Close(SaveChanges: saveChanges);
+         ActiveDocument?.Close(SaveChanges: saveChanges);
       }
       catch (System.Runtime.InteropServices.COMException) {
          return false;
       }
       finally {
-         Document = null;
+         ActiveDocument = null;
       }
       return true;
    }
 
-   // Remove specified table of contents from actual opened document.
-   public void RemoveTableOfContents(int tocIndex = 1)
+   // Remove given table of contents (TOC) from actual opened document.
+   public bool RemoveTableOfContents(int tocIndex = 1)
    {
       try {
-         if ((Document?.TablesOfContents.Count ?? 0) > 0) {
-            Document?.TablesOfContents[tocIndex].Delete();
+         if ((ActiveDocument?.TablesOfContents.Count ?? 0) > 0) {
+            ActiveDocument?.TablesOfContents[tocIndex].Delete();
+            return true;
          }
       }
       finally { }
+      return false;
    }
 
-   // Return specified Word document property value as string.
+   // Returns specified Word document property value as string.
    public string GetDocumentProperty(string propertyName, string defaultValue = "")
    {
-      if (Document is null) {
+      if (ActiveDocument is null) {
          return defaultValue;
       }
 
       // NOTE: Used dynamic to avoid referencing Microsoft.Office.Core COM-Object library.
-      foreach (dynamic property in Document.CustomDocumentProperties) {
+      foreach (dynamic property in ActiveDocument.CustomDocumentProperties) {
          if (property.Name == propertyName) {
             return property.Value.ToString();
          }
       }
-
       return defaultValue;
    }
 
-   // Iterates over all MS Word range objects of actual catalog matching the given styleName.
+
+   // Return specified range from active document if exists or null.
+   public MSWord.Range? GetRangeOrDefault(int startPos, int endPos) => ActiveDocument?.Range(startPos, endPos);
+
+   // Iterates over all range objects in actual document matching given styleName.
    public IEnumerable<MSWord.Range> GetRangesByStyleName(string styleName)
    {
-      MSWord.Range? rng = Document?.Range(0, Document.Content?.End ?? -1);
-      if (rng is null || Document is null) {
+      MSWord.Range? rng = ActiveDocument?.Range(0, ActiveDocument.Content?.End ?? -1);
+      if (rng is null || ActiveDocument is null) {
          yield break;
       }
 
       // Configure MS Word find method to search for styles.
-      MSWord.Style style = Document.Styles[styleName];
+      MSWord.Style style = ActiveDocument.Styles[styleName];
       rng.Find.ClearFormatting();
       rng.Find.Forward = true;
       rng.Find.Wrap = MSWord.WdFindWrap.wdFindStop;
       rng.Find.Format = true;
       rng.Find.set_Style(style);
 
-      long end = Document.Content?.End ?? -1;
+      long end = ActiveDocument.Content?.End ?? -1;
       while (rng.Find.Execute(FindText: "")) {
          if (rng.Start >= end) {
             yield break;
@@ -124,21 +113,38 @@ internal class WordApp: IDisposable
          yield return rng;
       }
    }
+
+   // Returns true if specified document is already open, otherwise false.
+   public bool IsDocumentOpen(string fileName) =>
+       string.Compare(ActiveDocument?.FullName ?? string.Empty, fileName, ignoreCase: true) == 0;
+
+   // Returns true if word object is initialized and Interop service is running, otherwise false.
+   public bool IsInitialized()
+   {
+      try {
+         return !string.IsNullOrWhiteSpace(_wordApp?.Version);
+      }
+      catch (System.Runtime.InteropServices.COMException) {
+         return false;
+      }
+   }
    #endregion
 
    #region // Internal API
-   // Create instance of MS Word in background mode. Returns true on success, otherwise false.
-   private bool CreateInstanceIfNotExists(bool visible = false)
+   // Creates new word object via Interop services and returns true on success, otherwise false.
+   private bool Initialize(bool visible = false)
    {
-      if (InstanceExists) {
+      if (IsInitialized()) {
          return true;
       }
 
+      // Try to initialize word object using Interop services.
       try {
          _wordApp = new() { Visible = visible };
-         return !string.IsNullOrEmpty(_wordApp?.Version);
+         return IsInitialized();
       }
       catch (System.Runtime.InteropServices.COMException) {
+         _ = CloseDocument();
          _wordApp = null;
          return false;
       }
@@ -157,7 +163,7 @@ internal class WordApp: IDisposable
       if (!_isDisposed && disposing) {
          _ = CloseDocument();
 
-         if (InstanceExists) {
+         if (IsInitialized()) {
             // Only dispose _wordApp if no documents are opened to prevent data loss.
             // This may occur, if another MS Word instance is created while Textblocks is running.
             if (_wordApp?.Documents.Count == 0) {
@@ -165,7 +171,7 @@ internal class WordApp: IDisposable
                _wordApp = null;
             }
             else {
-               // Ensure MS Word is visible so user has the chance to close it manually.
+               // Ensure MS Word is visible so user can close it manually.
                if (_wordApp is not null) {
                   _wordApp.Visible = true;
                }
