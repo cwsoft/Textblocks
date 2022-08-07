@@ -4,6 +4,7 @@ using System.IO.Compression;
 using System.Runtime.Serialization.Json;
 
 namespace cwsoft.Textblocks.Catalog;
+// Class to write catalog data as serialized gzipped textblocks catalog file (.tbc).
 internal class CatalogWriter
 {
    // Constructors.
@@ -20,7 +21,6 @@ internal class CatalogWriter
          return true;
       }
       catch (Exception e) {
-         System.Windows.Forms.MessageBox.Show(e.Message);
          return false;
       }
    }

@@ -4,6 +4,7 @@ using System.IO.Compression;
 using System.Runtime.Serialization.Json;
 
 namespace cwsoft.Textblocks.Catalog;
+// Class to read catalog data from serialized gzipped textblocks catalog file (.tbc).
 internal class CatalogReader
 {
    private Model.CatalogData _catalogData = new();
