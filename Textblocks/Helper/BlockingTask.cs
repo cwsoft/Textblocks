@@ -5,7 +5,7 @@ namespace cwsoft.Textblocks.Helper;
 
 // Enable WaitCursor and set optional control text when entering using block. 
 // Reset cursor and control text to initial values at exit.
-internal sealed class BlockingTask: IDisposable
+internal class BlockingTask: IDisposable
 {
    #region // Fields, Properties, Constructors
    // Private fields.

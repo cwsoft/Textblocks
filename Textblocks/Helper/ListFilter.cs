@@ -6,7 +6,7 @@ namespace cwsoft.Textblocks.Helper;
 
 // This class provides a basic logical filter (AND/OR/NOT) for generic lists.
 // Filter pattern(s) are applied to the specified input list property.
-public class ListFilter
+internal class ListFilter
 {
    #region // Fields, Properties, Constructors
    private const int _defaultPatternLength = 3;

@@ -4,7 +4,7 @@ namespace cwsoft.Textblocks.Model;
 
 // Data class to store data of a catalog textblock. 
 [Serializable()]
-public class Textblock
+internal class Textblock
 {
    public int Id { get; set; }
    public int CategoryId { get; set; }
