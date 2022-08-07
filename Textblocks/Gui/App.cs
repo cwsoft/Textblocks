@@ -13,7 +13,7 @@ public partial class App: Form
    #region // Fields, Properties, Constructors
    // Private constants and fields.
    private const int _minimumRequiredSearchPatternLength = 3;
-   private Model.Catalog? _catalog = null;
+   private Catalog.CatalogManager? _catalog = null;
    private List<Model.Textblock> _activeTextblocks = new();
    private readonly Helper.ListFilter _filter = new();
 

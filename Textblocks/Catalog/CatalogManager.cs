@@ -4,13 +4,15 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 
+using cwsoft.Textblocks.Model;
+
 using MSWord = Microsoft.Office.Interop.Word;
 
-namespace cwsoft.Textblocks.Model;
+namespace cwsoft.Textblocks.Catalog;
 
 // This class implements the logic to read, extract and write category and textblock
 // objects from catalog documents (*.docx) or textblock catalogs (*.tbc).
-internal class Catalog: IDisposable
+internal class CatalogManager: IDisposable
 {
    #region // Fields, Properties, Constructors
    // Private fields.
@@ -40,7 +42,7 @@ internal class Catalog: IDisposable
       && File.GetLastWriteTime(CatalogFile) > File.GetLastWriteTime(DocumentFile);
 
    // Constructor.
-   public Catalog(Helper.WordApp wordApp, Control? infoControl = null)
+   public CatalogManager(Helper.WordApp wordApp, Control? infoControl = null)
       => (_wordApp, _infoControl) = (wordApp, infoControl);
    #endregion
 
@@ -86,7 +88,7 @@ internal class Catalog: IDisposable
       ResetCatalog();
 
       // Only proceed if corresponding catalog document (*.docx) is opened in MS Word.
-      if (!(_wordApp.IsDocumentOpen(fileName: DocumentFile))) {
+      if (!_wordApp.IsDocumentOpen(fileName: DocumentFile)) {
          return false;
       }
 
@@ -122,7 +124,7 @@ internal class Catalog: IDisposable
 
    // Return list of textblocks matching specified category id (category id:=0 => all categories).
    public List<Textblock> GetTextblocksByCategoryId(int categoryId = 0)
-      => (categoryId == 0) ? Textblocks : Textblocks.Where(x => x.CategoryId == categoryId).ToList();
+      => categoryId == 0 ? Textblocks : Textblocks.Where(x => x.CategoryId == categoryId).ToList();
 
    // Return textblock object defined by it's Id from the actual loaded textblocks or null.
    public Textblock? GetTextblockById(int id) => Textblocks.Where(x => x.Id == id).FirstOrDefault();
@@ -161,7 +163,7 @@ internal class Catalog: IDisposable
          Filter = "Textblock Katalog|*.docx"
       };
 
-      string documentFile = (dialog.ShowDialog() == DialogResult.OK) ? dialog.FileName : string.Empty;
+      string documentFile = dialog.ShowDialog() == DialogResult.OK ? dialog.FileName : string.Empty;
       return IsValidDocumentFile(documentFile) ? documentFile : string.Empty;
    }
 
@@ -214,7 +216,7 @@ internal class Catalog: IDisposable
          // Update missing RngEndPos and Content of previous textblock.
          if (nbrTextblocks > 0) {
             // Previous range supposed to be actual category or end of previous textblock.
-            int previousTextblockEnd = (previousStyleName == categoryStyleName)
+            int previousTextblockEnd = previousStyleName == categoryStyleName
                ? previousRange.Paragraphs[1].Previous(1).Range.End
                : previousRange.End;
 
@@ -257,17 +259,17 @@ internal class Catalog: IDisposable
    // Returns true on success, otherwise false.
    private bool WriteCatalogFile()
    {
-      var catalogFile = new CatalogFile(Categories, Textblocks);
-      return catalogFile.WriteCatalog(CatalogFile);
+      var catalogData = new Model.CatalogData(CatalogFile, Categories, Textblocks);
+      return (new Textblocks.Catalog.CatalogWriter()).Write(CatalogFile, catalogData);
    }
 
    // Read textblock catalog file (*.tbc) and update actual Categories and Textblocks.
    // Returns true on success, otherwise false.
    private bool ReadCatalogFile()
    {
-      var catalogFile = new CatalogFile();
-      (Categories, Textblocks) = catalogFile.ReadCatalog(CatalogFile);
-      return (Categories.Count > 0 && Textblocks.Count > 0);
+      (bool status, CatalogData? catalogData) = (new Textblocks.Catalog.CatalogReader()).Read(CatalogFile);
+      (_, Categories, Textblocks) = catalogData;
+      return status && Categories.Count > 0 && Textblocks.Count > 0;
    }
    #endregion
 
