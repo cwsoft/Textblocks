@@ -134,7 +134,7 @@ internal class Catalog: IDisposable
    private (bool, Model.CatalogData) ExtractCatalogDataFromDocument(string documentPath)
    {
       // Create clean catalog data object for new data extraction.
-      var catalogData = new Model.CatalogData(documentPath, new(), new());
+      var catalogData = new Model.CatalogData(documentPath);
 
       // Extract style names from document properties or use defaults.
       string categoryStyleName = _wordApp.GetDocumentProperty("categoryStyleName", Properties.Resources.DefaultCategoryStyleName);

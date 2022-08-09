@@ -8,22 +8,16 @@ namespace cwsoft.Textblocks.Model;
 internal class CatalogData
 {
    #region // Fields, Properties, Constructors.
-   // Private fields.
-   private readonly string _catalogPath = string.Empty;
-   private readonly List<Category> _categories = new();
-   private readonly List<Textblock> _textblocks = new();
-
    // Public properties.
-   public string CatalogPath => GetCatalogPathByExtension(".tbc");
-   public string DocumentPath => GetCatalogPathByExtension(".docx");
-   public List<Category> Categories => _categories;
-   public List<Textblock> Textblocks => _textblocks;
+   public string DocumentPath { get; private set; }
+   public List<Category> Categories { get; private set; }
+   public List<Textblock> Textblocks { get; private set; }
 
    // Constructors.
    public CatalogData() : this(string.Empty, new(), new()) { }
-
-   public CatalogData(string catalogPath, List<Category> categories, List<Textblock> textblocks)
-      => (_catalogPath, _categories, _textblocks) = (catalogPath, categories, textblocks);
+   public CatalogData(string documentPath) : this(documentPath, new(), new()) { }
+   public CatalogData(string documentPath, List<Category> categories, List<Textblock> textblocks)
+      => (DocumentPath, Categories, Textblocks) = (documentPath, categories, textblocks);
    #endregion
 
    // String representation of catalog data object.
@@ -35,18 +29,6 @@ internal class CatalogData
       }
       catch (Exception) {
          return $"Katalog: '-', Kategorien: {Categories.Count}, Textblöcke: {Textblocks.Count}";
-      }
-   }
-
-   // Returns path to catalog file (.tbc) or catalog document file (.docx) or empty string.
-   private string GetCatalogPathByExtension(string extension = ".tbc")
-   {
-      try {
-         extension = extension.StartsWith(".", StringComparison.CurrentCultureIgnoreCase) ? extension : $".{extension}";
-         return $@"{Path.GetDirectoryName(_catalogPath)}" + $@"\{Path.GetFileNameWithoutExtension(_catalogPath)}{extension}";
-      }
-      catch (Exception) {
-         return string.Empty;
       }
    }
 }
