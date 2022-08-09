@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -13,7 +12,7 @@ public partial class App: Form
    #region // Fields, Properties, Constructors
    // Private constants and fields.
    private const int _minimumRequiredSearchPatternLength = 3;
-   private Catalog.CatalogManager? _catalog = null;
+   private Catalog.Catalog? _catalog = null;
    private List<Model.Textblock> _activeTextblocks = new();
    private readonly Helper.ListFilter _filter = new();
 
@@ -27,62 +26,27 @@ public partial class App: Form
    {
       InitializeComponent();
       Font = new Font("Segoe UI", 9f, FontStyle.Regular);
-      InitializeUI();
+      ApplyFormControlDefaults();
    }
    #endregion
 
-   #region // App main entry point
-   // Blocking initialization tasks moved here so we can show progress status while
-   // performing long running tasks during application startup phase.
+   #region // App main entry point, shutdown handler and reset.
+   // Initialize catalog manager and open last used catalog on startup.
+   // Blocking tasks moved here so we can show progress info at startup.
    private void App_Shown(object sender, EventArgs e)
    {
-      // Open MS Word in background mode or shutdown this App on failure.
+      // Initialize catalog object.
       StatusBarText = "Initialisiere Textblocks ... bitte warten";
-      Helper.WordApp? wordApp = null;
-      using (new Helper.BlockingTask(Rtb_Preview, "Baue Verbindung zu MS Word auf ... bitte warten")) {
-         wordApp = new(visible: false);
-         if (!wordApp.IsInitialized()) {
+      using (new Helper.BlockingTask(Rtb_Preview, "Initialisiere Textblocks ... bitte warten")) {
+         _catalog = new(infoControl: Rtb_Preview);
+         // Shutdown Textblocks app if MS Word connection failed (e.g. MS Word not installed).
+         if (!_catalog.IsInitialized) {
             ShutdownApp();
          }
       }
-
-      // Create catalog object and try to open last used catalog if exists.
-      using (new Helper.BlockingTask(Rtb_Preview, "Initialisiere Textblocks ... bitte warten")) {
-         _catalog = new(wordApp, infoControl: Rtb_Preview);
-         OpenLastUsedCatalogIfExists();
-      }
-
+      // Try to open last used catalog and refresh UI.
+      OpenLastUsedCatalogIfExists();
       RefreshUI(refreshTextblocks: true);
-   }
-   #endregion
-
-   #region // Internal API
-   // Initialize UI control elements and set filter tool tips.
-   private void InitializeUI()
-   {
-      // Show App version in main window title.
-      Text = $"Textblocks - Version {Properties.Resources.AppVersion} - (c) Christian Sommer";
-
-      // Change defaults of status bar tool strip labels.
-      StatusBarText = string.Empty;
-      Lbl_StatusBar.Alignment = ToolStripItemAlignment.Left;
-
-      // Configure tool tips for the filter controls.
-      ToolTip.AutoPopDelay = 10000;
-      ToolTip.ShowAlways = true;
-
-      string searchTip = "Suchbegriffe werden mit Leerzeichen getrennt (z.B.: begriff1 begriff2).\n" +
-         $"Jeder Suchbegriff muss mindestens {_minimumRequiredSearchPatternLength} Zeichen enthalten.\n\n" +
-         "UND/ODER ändert das Suchverhalten (ALLE bzw. min. EIN Begriff).\n" +
-         "Suchbegriffe mit - am Anfang werden ausgeschlossen (z. B.: -begriff1).\n\n" +
-         "Die Suche unterscheidet nicht zwischen Groß- und Kleinschreibung.";
-      ToolTip.SetToolTip(Tbx_SearchFilter, searchTip);
-      ToolTip.SetToolTip(Lbl_SearchFilter, searchTip);
-
-      ToolTip.SetToolTip(Btn_ApplyFilter, "Filtereinstellungen anwenden (oder [ENTER] drücken).");
-      ToolTip.SetToolTip(Btn_ResetFilter, "Filtereinstellungen löschen (oder [ESC] drücken).");
-      ToolTip.SetToolTip(Rbt_And, "Zeigt Textblöcke die ALLE Suchbegriffe enthalten.");
-      ToolTip.SetToolTip(Rbt_Or, "Zeigt Textblöcke die min. EINEN Suchbegriff enthalten.");
    }
 
    // Shutdown app in case no MS Word connection could be established.
@@ -99,37 +63,44 @@ public partial class App: Form
       }
    }
 
+   // Reset app into defined state in case InteropService.COMException was raised within RefreshUI.
+   private void ResetApp()
+   {
+      // Close actual opened MS Word catalog and release combobox data binding.
+      _catalog?.CloseCatalog();
+      (Cbx_Categories.DataSource, Cbx_Textblocks.DataSource) = (null, null);
+
+      _ = MessageBox.Show(
+         "Die Verbindung zu MS-Word wurde unterbrochen.",
+         "Fehler im Interop Service",
+         MessageBoxButtons.OK,
+         MessageBoxIcon.Warning
+      );
+
+      RefreshUI(refreshTextblocks: true);
+   }
+   #endregion
+
+   #region // Internal API
    // Try to autoload last opened catalog if exists.
    private void OpenLastUsedCatalogIfExists()
    {
-      // Open last used catalog document (*.docx) in MS Word if exists.
-      string lastCatalogFile = Properties.Settings.Default.LastUsedCatalog;
-      if (!(_catalog is not null && _catalog.OpenCatalog(lastCatalogFile, allowCatalogSelection: false))) {
-         return;
+      // Open last used catalog document if exists.
+      string lastDocumentPath = Properties.Settings.Default.LastUsedCatalog;
+      using (new Helper.BlockingTask(Rtb_Preview, $"Lade letzte Katalogdatei ... bitte warten")) {
+         if (_catalog is not null && _catalog.OpenCatalog(lastDocumentPath, allowCatalogSelection: false)) {
+            LoadAndDisplayCatalogData(lastDocumentPath);
+            return;
+         }
       }
 
-      // Ask before extracting from (*.docx) file if no (*.tbc) file exists, as this can be slow on large catalogs.
-      bool extractCatalog = true;
-      if (!_catalog.IsCatalogFileUpToDate) {
-         extractCatalog = (MessageBox.Show("Die Katalogdatei (*.tbc) des letzten Katalogs ist veraltet.\n" +
-            $"Letzter Katalog: '{Path.GetFileName(_catalog.DocumentFile)}'.\n\n" +
-            $"Kategorien und Textblöcke erneut extrahieren?",
-            "Daten der letzten Katalogdatei erneut extrahieren",
-            MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes);
-      }
-
-      if (extractCatalog) {
-         ExtractCatalogData();
-         return;
-      }
-
-      // Unset last used catalog so we are not asked again on next start-up.
-      _catalog.CloseCatalog();
+      // Unset last used catalog if not exists to skip check on next start-up.
+      _catalog?.CloseCatalog();
       Properties.Settings.Default.LastUsedCatalog = string.Empty;
    }
 
-   // Extract categories and textblocks from actual catalog file.
-   private void ExtractCatalogData()
+   // Load specified catalog and refresh UI.
+   private void LoadAndDisplayCatalogData(string catalogPath)
    {
       if (_catalog is null) {
          return;
@@ -140,24 +111,20 @@ public partial class App: Form
 
       // Extract categories and textblocks from actual catalog file (either WordFile or DataFile).
       using (new Helper.BlockingTask()) {
-         StatusBarText = $"Lade '{_catalog.DocumentFile}'";
-         if (_catalog.ExtractCatalog()) {
-            StatusBarText = $"Geladen: {Path.GetFileName(_catalog.DocumentFile)}, " +
-               $"geändert am: {File.GetLastWriteTime(_catalog.DocumentFile)}, " +
-               $"Kategorien: {_catalog.Categories.Count}, Textblöcke: {_catalog.Textblocks.Count}";
-
-            // Store path of actual catalog file to allow autoloading on next startup.
-            Properties.Settings.Default.LastUsedCatalog = _catalog.DocumentFile;
+         StatusBarText = $"Lade '{catalogPath}'";
+         if (_catalog.OpenCatalog(catalogPath)) {
+            StatusBarText = $"{_catalog.Data}";
+            Properties.Settings.Default.LastUsedCatalog = catalogPath;
          }
 
          // Update category and textblock data binding then refresh UI.
-         Cbx_Categories.DataSource = _catalog.Categories.ToList();
-         Cbx_Textblocks.DataSource = _catalog.Textblocks.ToList();
+         Cbx_Categories.DataSource = _catalog.Data.Categories.ToList();
+         Cbx_Textblocks.DataSource = _catalog.Data.Textblocks.ToList();
          RefreshUI(refreshTextblocks: true);
 
          // Show a status message in case no valid category or textblock exists.
-         if (_catalog.Categories.Count == 0 || _catalog.Textblocks.Count == 0) {
-            StatusBarText = $"Katalog '{_catalog.DocumentFile}' ist fehlerhaft.";
+         if (_catalog.Data.Categories.Count == 0 || _catalog.Data.Textblocks.Count == 0) {
+            StatusBarText = $"Katalog '{catalogPath}' ist fehlerhaft.";
             _ = MessageBox.Show("Die Katalogdatei ist leer oder fehlerhaft.\n" +
                "Bitte Katalogdatei und Word-Stilnamen überprüfen.",
                "Ungültige Katalogdatei (*.docx)",
@@ -173,7 +140,7 @@ public partial class App: Form
       try {
          // Only proceed if selected list box entry is a valid category object.
          if (Cbx_Categories.SelectedItem is not Model.Category category) {
-            StatusBarText = (_catalog?.WordInstanceExists ?? false)
+            StatusBarText = (_catalog?.IsInitialized ?? false)
                ? "Keine gültige Katalogdatei geladen."
                : "Verbindung zu MS-Word wurde unterbrochen.";
             InfoText = $"Bitte öffnen Sie eine gültige Katalogdatei über 'Datei -> Katalog öffnen' oder beenden Sie das Programm.";
@@ -209,19 +176,6 @@ public partial class App: Form
       }
    }
 
-   // Update filter controls to reflect actual state.
-   private void UpdateFilterControls(Model.Category category)
-   {
-      Grp_Textblocks.Text = $"Verfügbare Textblöcke ({_activeTextblocks.Count}/{category.NbrTextblocksInCategory}):";
-
-      // Highlight filter controls blue in case filter settings are active.
-      Grp_SearchFilter.Text = string.IsNullOrWhiteSpace(_filter.ValidatedPattern)
-         ? "Suchfilter inaktiv:"
-         : $"Suchfilter aktiviert (Treffer: {_activeTextblocks.Count}):";
-      Grp_SearchFilter.ForeColor = string.IsNullOrWhiteSpace(_filter.ValidatedPattern) ? Color.Black : Color.Blue;
-      Tbx_SearchFilter.ForeColor = Grp_SearchFilter.ForeColor;
-   }
-
    // Update preview with actual selected textblock content.
    private void UpdateTextblockPreview()
    {
@@ -251,23 +205,6 @@ public partial class App: Form
       }
    }
 
-   // Reset app into defined state in case InteropService.COMException was raised within RefreshUI.
-   private void ResetApp()
-   {
-      // Close actual opened MS Word catalog and release combobox data binding.
-      _catalog?.CloseCatalog();
-      (Cbx_Categories.DataSource, Cbx_Textblocks.DataSource) = (null, null);
-
-      _ = MessageBox.Show(
-         "Die Verbindung zu MS-Word wurde unterbrochen.",
-         "Fehler im Interop Service",
-         MessageBoxButtons.OK,
-         MessageBoxIcon.Warning
-      );
-
-      RefreshUI(refreshTextblocks: true);
-   }
-
    // Highlight all matches of and/or search patterns in actual textblock preview.
    private void HighlightSearchPatternsInTextblockPreview()
    {
@@ -280,6 +217,49 @@ public partial class App: Form
                .IndexOf(highlightPattern, nextPos + highlightPattern.Length, StringComparison.OrdinalIgnoreCase);
          }
       }
+   }
+   #endregion
+
+   #region // Update of form controls to reflect state.
+   // Update filter controls to reflect actual state.
+   private void UpdateFilterControls(Model.Category category)
+   {
+      Grp_Textblocks.Text = $"Verfügbare Textblöcke ({_activeTextblocks.Count}/{category.NbrTextblocksInCategory}):";
+
+      // Highlight filter controls blue in case filter settings are active.
+      Grp_SearchFilter.Text = string.IsNullOrWhiteSpace(_filter.ValidatedPattern)
+         ? "Suchfilter inaktiv:"
+         : $"Suchfilter aktiviert (Treffer: {_activeTextblocks.Count}):";
+      Grp_SearchFilter.ForeColor = string.IsNullOrWhiteSpace(_filter.ValidatedPattern) ? Color.Black : Color.Blue;
+      Tbx_SearchFilter.ForeColor = Grp_SearchFilter.ForeColor;
+   }
+
+   // Apply defaults for some main app form control elements like filter tool tips.
+   private void ApplyFormControlDefaults()
+   {
+      // Show App version in main window title.
+      Text = $"Textblocks - Version {Properties.Resources.AppVersion} - (c) Christian Sommer";
+
+      // Change defaults of status bar tool strip labels.
+      StatusBarText = string.Empty;
+      Lbl_StatusBar.Alignment = ToolStripItemAlignment.Left;
+
+      // Configure tool tips for the filter controls.
+      ToolTip.AutoPopDelay = 10000;
+      ToolTip.ShowAlways = true;
+
+      string searchTip = "Suchbegriffe werden mit Leerzeichen getrennt (z.B.: begriff1 begriff2).\n" +
+         $"Jeder Suchbegriff muss mindestens {_minimumRequiredSearchPatternLength} Zeichen enthalten.\n\n" +
+         "UND/ODER ändert das Suchverhalten (ALLE bzw. min. EIN Begriff).\n" +
+         "Suchbegriffe mit - am Anfang werden ausgeschlossen (z. B.: -begriff1).\n\n" +
+         "Die Suche unterscheidet nicht zwischen Groß- und Kleinschreibung.";
+      ToolTip.SetToolTip(Tbx_SearchFilter, searchTip);
+      ToolTip.SetToolTip(Lbl_SearchFilter, searchTip);
+
+      ToolTip.SetToolTip(Btn_ApplyFilter, "Filtereinstellungen anwenden (oder [ENTER] drücken).");
+      ToolTip.SetToolTip(Btn_ResetFilter, "Filtereinstellungen löschen (oder [ESC] drücken).");
+      ToolTip.SetToolTip(Rbt_And, "Zeigt Textblöcke die ALLE Suchbegriffe enthalten.");
+      ToolTip.SetToolTip(Rbt_Or, "Zeigt Textblöcke die min. EINEN Suchbegriff enthalten.");
    }
    #endregion
 
@@ -390,10 +370,7 @@ public partial class App: Form
       }
 
       InfoText = "Lade Katalogdatei ... bitte warten";
-      if (_catalog.OpenCatalog(allowCatalogSelection: true)) {
-         ExtractCatalogData();
-      }
-      else {
+      if (_catalog.OpenCatalog(catalogPath: "", allowCatalogSelection: true)) {
          RefreshUI(refreshTextblocks: true);
       }
    }
@@ -402,7 +379,7 @@ public partial class App: Form
 
    private void Men_Help_Click(object sender, EventArgs e)
    {
-      // Assume help file "Textblocks2.pdf" is located in the application startup folder.
+      // Assume help file "Textblocks.pdf" is located in the application startup folder.
       string helpFile = $@"{System.Windows.Forms.Application.StartupPath}\Textblocks.pdf";
       try {
          _ = System.Diagnostics.Process.Start(helpFile);
