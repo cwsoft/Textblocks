@@ -362,19 +362,16 @@ public partial class App: Form
    #endregion
 
    #region // UI Menu Event Handler
-   // Show file open catalog and let user select a new catalog file if exists.
+   // Open catalog selected via file open dialog.
    private void Men_OpenCatalog_Click(object sender, EventArgs e)
    {
-      // Let user select catalog file to open.
-      string documentPath = Catalog.Catalog.SelectCatalog();
-      if (_catalog is null || string.IsNullOrEmpty(documentPath)) {
-         return;
+      if (_catalog is not null) {
+         string documentPath = Catalog.Catalog.SelectCatalog();
+         if (!string.IsNullOrEmpty(documentPath)) {
+            InfoText = $"Lade Katalogdatei ... bitte warten";
+            LoadAndDisplayCatalogData(documentPath);
+         }
       }
-
-      // Open specified catalog.
-      InfoText = $"Lade Katalogdatei ... bitte warten";
-      LoadAndDisplayCatalogData(documentPath);
-      RefreshUI(refreshTextblocks: true);
    }
 
    private void Men_Quit_Click(object sender, EventArgs e) => Close();
