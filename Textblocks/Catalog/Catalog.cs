@@ -127,6 +127,17 @@ internal class Catalog: IDisposable
       }
       return null;
    }
+
+   // Returns filename or default value.
+   public static string GetFilenameOrDefault(string path, string @default = "")
+   {
+      try {
+         return Path.GetFileName(path);
+      }
+      catch (Exception) {
+         return @default ?? string.Empty;
+      }
+   }
    #endregion
 
    #region // Private API
@@ -204,7 +215,7 @@ internal class Catalog: IDisposable
             Heading = "Alle Kategorien",
             NbrTextblocksInCategory = nbrTextblocks
          });
-         
+
          return (true, catalogData);
       }
       catch (Exception) {
