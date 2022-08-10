@@ -365,14 +365,16 @@ public partial class App: Form
    // Show file open catalog and let user select a new catalog file if exists.
    private void Men_OpenCatalog_Click(object sender, EventArgs e)
    {
-      if (_catalog is null) {
+      // Let user select catalog file to open.
+      string documentPath = Catalog.Catalog.SelectCatalog();
+      if (_catalog is null || string.IsNullOrEmpty(documentPath)) {
          return;
       }
 
-      InfoText = "Lade Katalogdatei ... bitte warten";
-      if (_catalog.OpenCatalog(catalogPath: "", allowCatalogSelection: true)) {
-         RefreshUI(refreshTextblocks: true);
-      }
+      // Open specified catalog.
+      InfoText = $"Lade Katalogdatei ... bitte warten";
+      LoadAndDisplayCatalogData(documentPath);
+      RefreshUI(refreshTextblocks: true);
    }
 
    private void Men_Quit_Click(object sender, EventArgs e) => Close();

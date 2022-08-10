@@ -41,7 +41,7 @@ internal class Catalog: IDisposable
 
    #region // Public API
    // Returns path of catalog file (.docx) selected via file open dialog or empty string.
-   private static string SelectCatalog()
+   public static string SelectCatalog()
    {
       var dialog = new OpenFileDialog {
          Title = "Öffne Textblocks Katalog",
