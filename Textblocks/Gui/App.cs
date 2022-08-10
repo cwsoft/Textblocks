@@ -87,7 +87,7 @@ public partial class App: Form
    {
       // Open last used catalog document if exists.
       string lastDocumentPath = Properties.Settings.Default.LastUsedCatalog;
-      using (new Helper.BlockingTask(Rtb_Preview, $"Lade letzte Katalogdatei ... bitte warten")) {
+      using (new Helper.BlockingTask(Rtb_Preview, $"Lade letzten Katalog '{Catalog.Catalog.GetFilenameOrDefault(lastDocumentPath)}' ... bitte warten")) {
          if (_catalog is not null && _catalog.OpenCatalog(lastDocumentPath, allowCatalogSelection: false)) {
             LoadAndDisplayCatalogData(lastDocumentPath);
             return;
@@ -111,6 +111,7 @@ public partial class App: Form
 
       // Extract categories and textblocks from actual catalog file (either WordFile or DataFile).
       using (new Helper.BlockingTask()) {
+         InfoText = $"Lade Katalog '{Catalog.Catalog.GetFilenameOrDefault(catalogPath)}' ... bitte warten";
          StatusBarText = $"Lade '{catalogPath}'";
          if (_catalog.OpenCatalog(catalogPath)) {
             StatusBarText = $"{_catalog.Data}";
@@ -143,7 +144,7 @@ public partial class App: Form
             StatusBarText = (_catalog?.IsInitialized ?? false)
                ? "Keine gültige Katalogdatei geladen."
                : "Verbindung zu MS-Word wurde unterbrochen.";
-            InfoText = $"Bitte öffnen Sie eine gültige Katalogdatei über 'Datei -> Katalog öffnen' oder beenden Sie das Programm.";
+            InfoText = $"Bitte gültigen Katalog über 'Datei -> Katalog öffnen' wählen, oder Programm beenden.";
             return;
          }
 
@@ -368,7 +369,7 @@ public partial class App: Form
       if (_catalog is not null) {
          string documentPath = Catalog.Catalog.SelectCatalog();
          if (!string.IsNullOrEmpty(documentPath)) {
-            InfoText = $"Lade Katalogdatei ... bitte warten";
+            InfoText = $"Lade Katalog '{Catalog.Catalog.GetFilenameOrDefault(documentPath)}' ... bitte warten";
             LoadAndDisplayCatalogData(documentPath);
          }
       }
