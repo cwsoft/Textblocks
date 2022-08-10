@@ -136,75 +136,80 @@ internal class Catalog: IDisposable
       // Create clean catalog data object for new data extraction.
       var catalogData = new Model.CatalogData(documentPath);
 
-      // Extract style names from document properties or use defaults.
-      string categoryStyleName = _wordApp.GetDocumentProperty("categoryStyleName", Properties.Resources.DefaultCategoryStyleName);
-      string textblockStyleName = _wordApp.GetDocumentProperty("textblockStyleName", Properties.Resources.DefaultTextblockStyleName);
+      try {
+         // Extract style names from document properties or use defaults.
+         string categoryStyleName = _wordApp.GetDocumentProperty("categoryStyleName", Properties.Resources.DefaultCategoryStyleName);
+         string textblockStyleName = _wordApp.GetDocumentProperty("textblockStyleName", Properties.Resources.DefaultTextblockStyleName);
 
-      // Extract catalog data.
-      (int nbrCategories, int nbrTextblocks, int documentEnd) = (0, 0, _wordApp.ActiveDocument?.Content?.End ?? -1);
-      foreach (MSWord.Range? rng in _wordApp.GetRangesByStyleName(textblockStyleName)) {
-         if (rng is null) {
-            return (false, catalogData);
-         }
+         // Extract catalog data.
+         (int nbrCategories, int nbrTextblocks, int documentEnd) = (0, 0, _wordApp.ActiveDocument?.Content?.End ?? -1);
+         foreach (MSWord.Range? rng in _wordApp.GetRangesByStyleName(textblockStyleName)) {
+            if (rng is null) {
+               return (false, new Model.CatalogData(documentPath));
+            }
 
-         double completed = rng.Start / (double) documentEnd * 100;
-         InfoText = $"Extrahiere Katalogdaten aus Word-Datei '{Path.GetFileName(documentPath)}' ... Status [{completed:F0}%]";
+            double completed = rng.Start / (double) documentEnd * 100;
+            InfoText = $"Extrahiere Katalogdaten aus Word-Datei '{Path.GetFileName(documentPath)}' ... Status [{completed:F0}%]";
 
-         // Extract range and style name located just before actual textblock.
-         MSWord.Range? previousRange = rng.Paragraphs[1]?.Previous(1)?.Range;
-         if (previousRange is null) {
-            return (false, catalogData);
-         }
-         string previousStyleName = ((MSWord.Style) previousRange.get_Style()).NameLocal;
+            // Extract range and style name located just before actual textblock.
+            MSWord.Range? previousRange = rng.Paragraphs[1]?.Previous(1)?.Range;
+            if (previousRange is null) {
+               return (false, new Model.CatalogData(documentPath));
+            }
+            string previousStyleName = ((MSWord.Style) previousRange.get_Style()).NameLocal;
 
-         if (previousStyleName == categoryStyleName) {
-            catalogData.Categories.Add(new() {
-               Id = ++nbrCategories,
-               Heading = previousRange.Text
+            if (previousStyleName == categoryStyleName) {
+               catalogData.Categories.Add(new() {
+                  Id = ++nbrCategories,
+                  Heading = previousRange.Text
+               });
+            }
+
+            // Update missing RngEndPos and Content of previous textblock.
+            if (nbrTextblocks > 0) {
+               // Previous range supposed to be actual category or end of previous textblock.
+               int previousTextblockEnd = (previousStyleName == categoryStyleName)
+                  ? previousRange.Paragraphs[1].Previous(1).Range.End
+                  : previousRange.End;
+
+               catalogData.Textblocks[nbrTextblocks - 1].RngEndPos = previousTextblockEnd;
+               catalogData.Textblocks[nbrTextblocks - 1].Content =
+                  _wordApp.ActiveDocument?.Range(catalogData.Textblocks[nbrTextblocks - 1].RngStartPos, previousTextblockEnd).Text ?? string.Empty;
+            }
+
+            // Add all available information of actual textblock.
+            catalogData.Textblocks.Add(new() {
+               Id = ++nbrTextblocks,
+               CategoryId = nbrCategories,
+               Heading = rng.Text,
+               RngStartPos = rng.Start
             });
          }
 
-         // Update missing RngEndPos and Content of previous textblock.
-         if (nbrTextblocks > 0) {
-            // Previous range supposed to be actual category or end of previous textblock.
-            int previousTextblockEnd = (previousStyleName == categoryStyleName)
-               ? previousRange.Paragraphs[1].Previous(1).Range.End
-               : previousRange.End;
-
-            catalogData.Textblocks[nbrTextblocks - 1].RngEndPos = previousTextblockEnd;
+         // Update missing RngEndPos and Content of very last textblock.
+         if (catalogData.Textblocks.Count > 0) {
+            catalogData.Textblocks[nbrTextblocks - 1].RngEndPos = documentEnd;
             catalogData.Textblocks[nbrTextblocks - 1].Content =
-               _wordApp.ActiveDocument?.Range(catalogData.Textblocks[nbrTextblocks - 1].RngStartPos, previousTextblockEnd).Text ?? string.Empty;
+               _wordApp.ActiveDocument?.Range(catalogData.Textblocks[nbrTextblocks - 1].RngStartPos, documentEnd).Text ?? string.Empty;
          }
 
-         // Add all available information of actual textblock.
-         catalogData.Textblocks.Add(new() {
-            Id = ++nbrTextblocks,
-            CategoryId = nbrCategories,
-            Heading = rng.Text,
-            RngStartPos = rng.Start
+         // Add number of available textblocks for each category.
+         for (int i = 0; i < catalogData.Categories.Count; i++) {
+            catalogData.Categories[i].NbrTextblocksInCategory = GetTextblocksByCategoryId(i + 1).Count;
+         }
+
+         // Add summary category containg all available textblocks.
+         catalogData.Categories.Insert(0, new() {
+            Id = 0,
+            Heading = "Alle Kategorien",
+            NbrTextblocksInCategory = nbrTextblocks
          });
+         
+         return (true, catalogData);
       }
-
-      // Update missing RngEndPos and Content of very last textblock.
-      if (catalogData.Textblocks.Count > 0) {
-         catalogData.Textblocks[nbrTextblocks - 1].RngEndPos = documentEnd;
-         catalogData.Textblocks[nbrTextblocks - 1].Content =
-            _wordApp.ActiveDocument?.Range(catalogData.Textblocks[nbrTextblocks - 1].RngStartPos, documentEnd).Text ?? string.Empty;
+      catch (Exception) {
+         return (false, new Model.CatalogData(documentPath));
       }
-
-      // Add number of available textblocks for each category.
-      for (int i = 0; i < catalogData.Categories.Count; i++) {
-         catalogData.Categories[i].NbrTextblocksInCategory = GetTextblocksByCategoryId(i + 1).Count;
-      }
-
-      // Add summary category containg all available textblocks.
-      catalogData.Categories.Insert(0, new() {
-         Id = 0,
-         Heading = "Alle Kategorien",
-         NbrTextblocksInCategory = nbrTextblocks
-      });
-
-      return (true, catalogData);
    }
 
    // Returns path to catalog data file (.tbc) or catalog document (.docx) depending on given extension.
