@@ -12,7 +12,7 @@ public partial class App: Form
    #region // Fields, Properties, Constructors
    // Private constants and fields.
    private const int _minimumRequiredSearchPatternLength = 3;
-   private Catalog.Catalog? _catalog = null;
+   private Catalog.CatalogManager? _catalogManager = null;
    private List<Model.Textblock> _activeTextblocks = new();
    private readonly Helper.ListFilter _filter = new();
 
@@ -38,9 +38,9 @@ public partial class App: Form
       // Initialize catalog object.
       StatusBarText = "Initialisiere Textblocks ... bitte warten";
       using (new Helper.BlockingTask(Rtb_Preview, "Initialisiere Textblocks ... bitte warten")) {
-         _catalog = new(infoControl: Rtb_Preview);
+         _catalogManager = new(infoControl: Rtb_Preview);
          // Shutdown Textblocks app if MS Word connection failed (e.g. MS Word not installed).
-         if (!_catalog.IsInitialized) {
+         if (!_catalogManager.IsInitialized) {
             ShutdownApp();
          }
       }
@@ -67,7 +67,7 @@ public partial class App: Form
    private void ResetApp()
    {
       // Close actual opened MS Word catalog and release combobox data binding.
-      _catalog?.CloseCatalog();
+      _catalogManager?.CloseCatalog();
       (Cbx_Categories.DataSource, Cbx_Textblocks.DataSource) = (null, null);
 
       _ = MessageBox.Show(
@@ -87,22 +87,22 @@ public partial class App: Form
    {
       // Open last used catalog document if exists.
       string lastDocumentPath = Properties.Settings.Default.LastUsedCatalog;
-      using (new Helper.BlockingTask(Rtb_Preview, $"Lade letzten Katalog '{Catalog.Catalog.GetFilenameOrDefault(lastDocumentPath)}' ... bitte warten")) {
-         if (_catalog is not null && _catalog.OpenCatalog(lastDocumentPath, allowCatalogSelection: false)) {
+      using (new Helper.BlockingTask(Rtb_Preview, $"Lade letzten Katalog '{Catalog.CatalogManager.GetFilenameOrDefault(lastDocumentPath)}' ... bitte warten")) {
+         if (_catalogManager is not null && _catalogManager.OpenCatalog(lastDocumentPath, allowCatalogSelection: false)) {
             LoadAndDisplayCatalogData(lastDocumentPath);
             return;
          }
       }
 
       // Unset last used catalog if not exists to skip check on next start-up.
-      _catalog?.CloseCatalog();
+      _catalogManager?.CloseCatalog();
       Properties.Settings.Default.LastUsedCatalog = string.Empty;
    }
 
    // Load specified catalog and refresh UI.
    private void LoadAndDisplayCatalogData(string catalogPath)
    {
-      if (_catalog is null) {
+      if (_catalogManager is null) {
          return;
       }
 
@@ -111,20 +111,20 @@ public partial class App: Form
 
       // Extract categories and textblocks from actual catalog file (either WordFile or DataFile).
       using (new Helper.BlockingTask()) {
-         InfoText = $"Lade Katalog '{Catalog.Catalog.GetFilenameOrDefault(catalogPath)}' ... bitte warten";
+         InfoText = $"Lade Katalog '{Catalog.CatalogManager.GetFilenameOrDefault(catalogPath)}' ... bitte warten";
          StatusBarText = $"Lade '{catalogPath}'";
-         if (_catalog.OpenCatalog(catalogPath)) {
-            StatusBarText = $"{_catalog.Data}";
+         if (_catalogManager.OpenCatalog(catalogPath)) {
+            StatusBarText = $"{_catalogManager.Data}";
             Properties.Settings.Default.LastUsedCatalog = catalogPath;
          }
 
          // Update category and textblock data binding then refresh UI.
-         Cbx_Categories.DataSource = _catalog.Data.Categories.ToList();
-         Cbx_Textblocks.DataSource = _catalog.Data.Textblocks.ToList();
+         Cbx_Categories.DataSource = _catalogManager.Data.Categories.ToList();
+         Cbx_Textblocks.DataSource = _catalogManager.Data.Textblocks.ToList();
          RefreshUI(refreshTextblocks: true);
 
          // Show a status message in case no valid category or textblock exists.
-         if (_catalog.Data.Categories.Count == 0 || _catalog.Data.Textblocks.Count == 0) {
+         if (_catalogManager.Data.Categories.Count == 0 || _catalogManager.Data.Textblocks.Count == 0) {
             StatusBarText = $"Katalog '{catalogPath}' ist fehlerhaft.";
             _ = MessageBox.Show("Die Katalogdatei ist leer oder fehlerhaft.\n" +
                "Bitte Katalogdatei und Word-Stilnamen überprüfen.",
@@ -141,7 +141,7 @@ public partial class App: Form
       try {
          // Only proceed if selected list box entry is a valid category object.
          if (Cbx_Categories.SelectedItem is not Model.Category category) {
-            StatusBarText = (_catalog?.IsInitialized ?? false)
+            StatusBarText = (_catalogManager?.IsInitialized ?? false)
                ? "Keine gültige Katalogdatei geladen."
                : "Verbindung zu MS-Word wurde unterbrochen.";
             InfoText = $"Bitte gültigen Katalog über 'Datei -> Katalog öffnen' wählen, oder Programm beenden.";
@@ -165,8 +165,8 @@ public partial class App: Form
    // Filter textblocks for actual category matching optional filter criteria.
    private void FilterTextblocksByCategoryAndSearchPattern(bool refreshTextblocks, Model.Category category)
    {
-      if (_catalog is not null && refreshTextblocks) {
-         _activeTextblocks = _catalog.GetTextblocksByCategoryId(category.Id);
+      if (_catalogManager is not null && refreshTextblocks) {
+         _activeTextblocks = _catalogManager.GetTextblocksByCategoryId(category.Id);
          _activeTextblocks = _filter.GetMatches(_activeTextblocks, propertyName: "Content", operatorAnd: Rbt_And.Checked);
          Cbx_Textblocks.DataSource = _activeTextblocks;
       }
@@ -181,10 +181,10 @@ public partial class App: Form
    private void UpdateTextblockPreview()
    {
       if (Cbx_Textblocks.SelectedItem is Model.Textblock textblock) {
-         Lbl_Category.Text = $"Kategorie: {_catalog?.GetCategoryById(textblock.CategoryId)?.Heading ?? "N/A"}";
+         Lbl_Category.Text = $"Kategorie: {_catalogManager?.GetCategoryById(textblock.CategoryId)?.Heading ?? "N/A"}";
 
          // Copy MS Word range of actual textblock to clipboard and extract rich text format for preview.
-         if (_catalog?.GetTextblockDocumentRange(textblock) is Microsoft.Office.Interop.Word.Range range) {
+         if (_catalogManager?.GetTextblockDocumentRange(textblock) is Microsoft.Office.Interop.Word.Range range) {
             range.Copy();
 
             // HACK: Avoid empty textblock preview e.g. due to timing issues with clipboard.
@@ -272,7 +272,7 @@ public partial class App: Form
       Properties.Settings.Default.Save();
 
       // Free managed and unmanaged Model.Catalog resources.
-      _catalog?.Dispose();
+      _catalogManager?.Dispose();
    }
 
    // Don't use _SelectionChange event to avoid updates triggerd by application code.
@@ -366,10 +366,10 @@ public partial class App: Form
    // Open catalog selected via file open dialog.
    private void Men_OpenCatalog_Click(object sender, EventArgs e)
    {
-      if (_catalog is not null) {
-         string documentPath = Catalog.Catalog.SelectCatalog();
+      if (_catalogManager is not null) {
+         string documentPath = Catalog.CatalogManager.SelectCatalog();
          if (!string.IsNullOrEmpty(documentPath)) {
-            InfoText = $"Lade Katalog '{Catalog.Catalog.GetFilenameOrDefault(documentPath)}' ... bitte warten";
+            InfoText = $"Lade Katalog '{Catalog.CatalogManager.GetFilenameOrDefault(documentPath)}' ... bitte warten";
             LoadAndDisplayCatalogData(documentPath);
          }
       }

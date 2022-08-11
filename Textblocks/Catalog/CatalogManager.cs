@@ -10,7 +10,7 @@ namespace cwsoft.Textblocks.Catalog;
 
 // Class to open catalog documents (.docx) in MS Word and to store relevant data as catalog data object in memory.
 // Extracted data is stored in JSON serialized gzipped catalog files (.tbc) to speed up subsequent catalog loading.
-internal class Catalog: IDisposable
+internal class CatalogManager: IDisposable
 {
    #region // Fields, Properties, Constructors
    // Private fields.
@@ -32,7 +32,7 @@ internal class Catalog: IDisposable
    }
 
    // Constructor.
-   public Catalog(Control? infoControl = null)
+   public CatalogManager(Control? infoControl = null)
    {
       _wordApp = new(visible: false);
       _infoControl = infoControl;

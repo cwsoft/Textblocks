@@ -15,7 +15,7 @@ partial class App
    {
       if (disposing && (components != null)) {
          components.Dispose();
-         _catalog?.Dispose();
+         _catalogManager?.Dispose();
       }
       base.Dispose(disposing);
    }
