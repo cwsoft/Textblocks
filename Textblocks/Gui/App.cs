@@ -9,7 +9,7 @@ namespace cwsoft.Textblocks.Gui;
 // This class implements the main application GUI the user interacts with.
 public partial class App: Form
 {
-   #region // Fields, Properties, Constructors
+   #region // Fields, Properties, Constructors.
    // Private constants and fields.
    private const int _minimumRequiredSearchPatternLength = 3;
    private Catalog.CatalogManager? _catalogManager = null;
@@ -44,6 +44,7 @@ public partial class App: Form
             ShutdownApp();
          }
       }
+      
       // Try to open last used catalog and refresh UI.
       OpenLastUsedCatalogIfExists();
       RefreshUI(refreshTextblocks: true);

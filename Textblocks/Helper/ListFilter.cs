@@ -9,9 +9,11 @@ namespace cwsoft.Textblocks.Helper;
 internal class ListFilter
 {
    #region // Fields, Properties, Constructors
+   // Fields.
    private const int _defaultPatternLength = 3;
    private int _minimumPatternLength = 0;
 
+   // Properties.
    public string InputPattern { get; private set; } = string.Empty;
    public string ValidatedPattern { get; private set; } = string.Empty;
    public List<string> InclusivePatterns { get; private set; } = new();
@@ -21,7 +23,6 @@ internal class ListFilter
    public ListFilter() : this(pattern: "") { }
    public ListFilter(string pattern, int minimumPatternLength = _defaultPatternLength)
       => SetPattern(pattern, minimumPatternLength);
-
    #endregion
 
    #region // Public API

@@ -7,7 +7,7 @@ namespace cwsoft.Textblocks.Model;
 [Serializable()]
 internal class CatalogData
 {
-   #region // Fields, Properties, Constructors.
+   #region // Properties, Constructors.
    // Public properties.
    public string DocumentPath { get; private set; }
    public List<Category> Categories { get; private set; }
