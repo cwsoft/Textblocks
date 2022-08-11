@@ -8,19 +8,19 @@ namespace cwsoft.Textblocks.Helper;
 // Microsoft Word wrapper to automate some tasks using Office Interop services.
 internal class WordApp: IDisposable
 {
-   #region // Fields, Properties, Constructors
+   #region // Fields, Properties, Constructors.
    // Private fields.
    private MSWord.Application? _wordApp = null;
 
-   // Public properties.
+   // Properties.
    public MSWord.Document? ActiveDocument { get; private set; } = null;
 
-   // Constructor.
+   // Constructors.
    public WordApp(bool visible = false) => Initialize(visible);
    #endregion
 
    #region // Public API
-   // Returns true if specified document could be opened, otherwise false.
+   // Returns true if document was successfully opened, otherwise false.
    public bool OpenDocument(string fileName, bool visible = false, bool readOnly = true)
    {
       // Ensure Interop service runs and word object is initialized.
@@ -31,7 +31,7 @@ internal class WordApp: IDisposable
       // Close actual document so we have only one document open at any time.
       _ = CloseDocument(saveChanges: false);
 
-      // Try to open the specified document.
+      // Try to open specified document.
       try {
          ActiveDocument = _wordApp?.Documents.Open(FileName: fileName, ReadOnly: readOnly, Visible: visible);
          return string.Compare(ActiveDocument?.FullName ?? string.Empty, fileName, ignoreCase: true) == 0;
@@ -41,7 +41,7 @@ internal class WordApp: IDisposable
       }
    }
 
-   // Closes the actual opened document and returns true on success, otherwise false.
+   // Returns true if active document could be closed, otherwise false.
    public bool CloseDocument(bool saveChanges = false)
    {
       try {
@@ -65,7 +65,8 @@ internal class WordApp: IDisposable
             return true;
          }
       }
-      finally { }
+      catch (Exception) { }
+
       return false;
    }
 
@@ -84,7 +85,6 @@ internal class WordApp: IDisposable
       }
       return defaultValue;
    }
-
 
    // Return specified range from active document if exists or null.
    public MSWord.Range? GetRangeOrDefault(int startPos, int endPos) => ActiveDocument?.Range(startPos, endPos);
