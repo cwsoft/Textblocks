@@ -12,9 +12,9 @@ Textblocks spielt seine Stärke vor allem da aus, wo große Word-Dokumente nach 
 - **Für Selbst-Kompilierer:**
   - [Office PIA](./Textblocks/PIA/Howto-Office-PIA.md) `Microsoft.Office.Interop.Word.dll`
   - MS Visual Studio (oder kompatiblen C#-Compiler) 
-  - Textblocks ist ohne Code-Änderungen für NET Framework 4.8 bis Net 6 kompilierbar
+  - Textblocks ist für NET Framework 4.8 bis Net 6 kompilierbar
   - Ziel-Framework in `Textblocks.csproj`: `<TargetFramework>net48|net6.0-windows</TargetFramework>` 
-  - Zum Teil werden kompatible Sprachfeatures bis einschließlich C# 10 genutzt
+  - Es werden kompatible Sprachfeatures von C# 10 genutzt
 
 ## Aufbau der Katalogdateien
 Informationen zum Aufbau der Katalogdateien .docx sind im Beispielkatalog [Textblocks_Katalog_Vorlage.dotx](https://github.com/cwsoft/Textblocks/blob/main/Kataloge/Textblocks_Katalog_Vorlage.docx?raw=true) enthalten. Jede Katalogdatei muss mindestens zwei Word-Formatvorlagen enthalten, damit die Anwendung `Textblocks.exe` die jeweiligen Start- und Endpositionen der enthaltenen **Kategorien** und **Textblöcke** ermitteln kann.
