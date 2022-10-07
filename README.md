@@ -7,14 +7,14 @@ Textblocks spielt seine Stärke vor allem da aus, wo große Word-Dokumente nach 
 
 ## Mindestanforderungen
 - Windows Betriebssystem (ab Windows 10)
-- Microsoft Word (getestet mit MS-Word 2010-2019, **Hinweis:** Office-365 wird nicht unterstützt)
+- Microsoft Word 2010-2019 (Office-365 wird nicht unterstützt)
 - Katalogdatei (.docx) mit Textbausteinen
 - **Für Selbst-Kompilierer:**
   - [Office PIA](./Textblocks/PIA/Howto-Office-PIA.md) `Microsoft.Office.Interop.Word.dll`
   - MS Visual Studio (oder kompatiblen C#-Compiler) 
-  - Textblocks ist für NET Framework 4.8 bis Net 6 kompilierbar
-  - Ziel-Framework in `Textblocks.csproj`: `<TargetFramework>net48|net6.0-windows</TargetFramework>` 
-  - Es werden kompatible Sprachfeatures von C# 10 genutzt
+  - Kompilierbar für NET Framework 4.8 bis Net 6
+  - `<TargetFramework>net48|net6.0-windows</TargetFramework>` 
+  - Es werden nur kompatible C# 10 Sprachfeatures genutzt
 
 ## Aufbau der Katalogdateien
 Informationen zum Aufbau der Katalogdateien .docx sind im Beispielkatalog [Textblocks_Katalog_Vorlage.dotx](https://github.com/cwsoft/Textblocks/blob/main/Kataloge/Textblocks_Katalog_Vorlage.docx?raw=true) enthalten. Jede Katalogdatei muss mindestens zwei Word-Formatvorlagen enthalten, damit die Anwendung `Textblocks.exe` die jeweiligen Start- und Endpositionen der enthaltenen **Kategorien** und **Textblöcke** ermitteln kann.
