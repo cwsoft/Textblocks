@@ -8,3 +8,7 @@ Details about the typicall file location of the DLL or details about how to inst
 
 - [How to install Office PIA](https://docs.microsoft.com/en-us/visualstudio/vsto/how-to-install-office-primary-interop-assemblies?view=vs-2022)
 - [Office PIA](https://docs.microsoft.com/en-us/visualstudio/vsto/office-primary-interop-assemblies?view=vs-2022)
+
+## Installing via NuGet
+You can install the corresponding NuGet package of [Microsoft.Office.Interop.Word.dll](
+https://www.nuget.org/packages/Microsoft.Office.Interop.Word) in case you don't have the required Dll installed on your dev machine.
