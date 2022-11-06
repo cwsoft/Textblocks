@@ -8,7 +8,7 @@ using MSWord = Microsoft.Office.Interop.Word;
 
 namespace cwsoft.Textblocks.Catalog;
 
-// Class to open catalog documents (.docx) in MS Word and to store relevant data as catalog data object in memory.
+// Class to open catalog documents (.docx) in MS-Word and to store relevant data as catalog data object in memory.
 // Extracted data is stored in JSON serialized gzipped catalog files (.tbc) to speed up subsequent catalog loading.
 internal class CatalogManager: IDisposable
 {
@@ -106,7 +106,7 @@ internal class CatalogManager: IDisposable
    {
       _ = _wordApp.CloseDocument();
       Data = new();
-      InfoText = "Bitte gültige Katalogdatei öffnen ('Datei -> Katalog öffnen') oder das Program beenden.";
+      InfoText = "Bitte gültige Katalogdatei laden (Datei -> Katalog öffnen) oder Textblocks beenden.";
    }
 
    // Returns category object from Categories matching given Id or null.
@@ -119,7 +119,7 @@ internal class CatalogManager: IDisposable
    public List<Model.Textblock> GetTextblocksByCategoryId(int categoryId = 0)
       => (categoryId == 0) ? Data.Textblocks : Data.Textblocks.Where(x => x.CategoryId == categoryId).ToList();
 
-   // Returns MS Word document range of given textblock or null.
+   // Returns MS-Word document range of given textblock or null.
    public MSWord.Range? GetTextblockDocumentRange(Model.Textblock textblock)
    {
       if (textblock is not null) {
@@ -149,8 +149,8 @@ internal class CatalogManager: IDisposable
 
       try {
          // Extract style names from document properties or use defaults.
-         string categoryStyleName = _wordApp.GetDocumentProperty("categoryStyleName", Properties.Resources.DefaultCategoryStyleName);
-         string textblockStyleName = _wordApp.GetDocumentProperty("textblockStyleName", Properties.Resources.DefaultTextblockStyleName);
+         string categoryStyleName = _wordApp.GetDocumentProperty("tb_Kategorie", Properties.Resources.DefaultCategoryStyleName);
+         string textblockStyleName = _wordApp.GetDocumentProperty("tb_Textblock", Properties.Resources.DefaultTextblockStyleName);
 
          // Extract catalog data.
          (int nbrCategories, int nbrTextblocks, int documentEnd) = (0, 0, _wordApp.ActiveDocument?.Content?.End ?? -1);
@@ -160,7 +160,7 @@ internal class CatalogManager: IDisposable
             }
 
             double completed = rng.Start / (double) documentEnd * 100;
-            InfoText = $"Extrahiere Katalogdaten aus Word-Datei '{Path.GetFileName(documentPath)}' ... Status [{completed:F0}%]";
+            InfoText = $"Extrahiere Katalogdaten aus '{Path.GetFileName(documentPath)}' ... Status [{completed:F0}%]";
 
             // Extract range and style name located just before actual textblock.
             MSWord.Range? previousRange = rng.Paragraphs[1]?.Previous(1)?.Range;
@@ -242,7 +242,7 @@ internal class CatalogManager: IDisposable
    // Implements IDisposable interface.
    public void Dispose() => Dispose(true);
 
-   // Free references to MS Word application and MS document.
+   // Free references to MS-Word application and MS-Document.
    protected virtual void Dispose(bool disposing)
    {
       if (!_isDisposed) {

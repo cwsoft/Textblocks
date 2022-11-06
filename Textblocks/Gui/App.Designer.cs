@@ -35,6 +35,7 @@ partial class App
          this.menuStrip1 = new System.Windows.Forms.MenuStrip();
          this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
          this.Men_OpenCatalog = new System.Windows.Forms.ToolStripMenuItem();
+         this.Men_CloseCatalog = new System.Windows.Forms.ToolStripMenuItem();
          this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
          this.Men_Quit = new System.Windows.Forms.ToolStripMenuItem();
          this.hilfeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -107,6 +108,7 @@ partial class App
          // 
          this.toolStripMenuItem1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.Men_OpenCatalog,
+            this.Men_CloseCatalog,
             this.toolStripSeparator1,
             this.Men_Quit});
          this.toolStripMenuItem1.Name = "toolStripMenuItem1";
@@ -116,19 +118,27 @@ partial class App
          // Men_OpenCatalog
          // 
          this.Men_OpenCatalog.Name = "Men_OpenCatalog";
-         this.Men_OpenCatalog.Size = new System.Drawing.Size(152, 22);
+         this.Men_OpenCatalog.Size = new System.Drawing.Size(180, 22);
          this.Men_OpenCatalog.Text = "Katalog &öffnen";
          this.Men_OpenCatalog.Click += new System.EventHandler(this.Men_OpenCatalog_Click);
+         // 
+         // Men_CloseCatalog
+         // 
+         this.Men_CloseCatalog.Enabled = false;
+         this.Men_CloseCatalog.Name = "Men_CloseCatalog";
+         this.Men_CloseCatalog.Size = new System.Drawing.Size(180, 22);
+         this.Men_CloseCatalog.Text = "Katalog &schließen";
+         this.Men_CloseCatalog.Click += new System.EventHandler(this.Men_CloseCatalog_Click);
          // 
          // toolStripSeparator1
          // 
          this.toolStripSeparator1.Name = "toolStripSeparator1";
-         this.toolStripSeparator1.Size = new System.Drawing.Size(149, 6);
+         this.toolStripSeparator1.Size = new System.Drawing.Size(177, 6);
          // 
          // Men_Quit
          // 
          this.Men_Quit.Name = "Men_Quit";
-         this.Men_Quit.Size = new System.Drawing.Size(152, 22);
+         this.Men_Quit.Size = new System.Drawing.Size(180, 22);
          this.Men_Quit.Text = "&Beenden";
          this.Men_Quit.Click += new System.EventHandler(this.Men_Quit_Click);
          // 
@@ -360,7 +370,7 @@ partial class App
          this.MinimumSize = new System.Drawing.Size(750, 400);
          this.Name = "App";
          this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Show;
-         this.Text = "TextBlocks - (c) Christian Sommer";
+         this.Text = "Textblocks";
          this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.App_FormClosing);
          this.Shown += new System.EventHandler(this.App_Shown);
          this.menuStrip1.ResumeLayout(false);
@@ -403,5 +413,6 @@ partial class App
    private System.Windows.Forms.Label label4;
    private System.Windows.Forms.RadioButton Rbt_Or;
    private System.Windows.Forms.RadioButton Rbt_And;
+    private System.Windows.Forms.ToolStripMenuItem Men_CloseCatalog;
 }
 

@@ -8,7 +8,7 @@ internal class Category
 {
    public int Id { get; set; }
    public string Heading { get; set; } = string.Empty;
-   public int NbrTextblocksInCategory { get; set; } = -1;
+   public int NbrTextblocksInCategory { get; set; } = 0;
 
    // String representation.
    public override string ToString() => $"{Id}: {Heading} ({NbrTextblocksInCategory})";

@@ -118,10 +118,10 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AppReleaseDate" xml:space="preserve">
-    <value>05.05.2022</value>
+    <value>06.11.2022</value>
   </data>
   <data name="AppVersion" xml:space="preserve">
-    <value>2022.05</value>
+    <value>22.11</value>
   </data>
   <data name="DefaultCategoryStyleName" xml:space="preserve">
     <value>tb_Kategorie</value>
