@@ -77,10 +77,10 @@ internal class WordApp: IDisposable
          return defaultValue;
       }
 
-      // NOTE: Used dynamic to avoid referencing Microsoft.Office.Core COM-Object library.
+      // Used dynamic to access COM methods more easily (requires to embed needed interop types via csproj).
       foreach (dynamic property in ActiveDocument.CustomDocumentProperties) {
-         if (property.Name == propertyName) {
-            return property.Value.ToString();
+         if (property?.Name == propertyName) {
+            return (property?.Value ?? string.Empty).ToString();
          }
       }
       return defaultValue;
