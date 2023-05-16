@@ -206,7 +206,7 @@ internal class CatalogManager: IDisposable
 
          // Add number of available textblocks for each category.
          for (int i = 0; i < catalogData.Categories.Count; i++) {
-            catalogData.Categories[i].NbrTextblocksInCategory = GetTextblocksByCategoryId(i + 1).Count;
+            catalogData.Categories[i].NbrTextblocksInCategory = catalogData.Textblocks.Where(x => x.CategoryId == i+1).ToList().Count;
          }
 
          // Add summary category containg all available textblocks.
