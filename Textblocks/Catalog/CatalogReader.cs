@@ -9,14 +9,14 @@ internal static class CatalogReader
 {
    // Read data from serialized gzipped textblocks catalog file (.tbc).
    // Returns Tuple with file operation status and the catalog data object.
-   public static (bool, Model.CatalogData) Read(string catalogPath)
+   public static (bool, Model.Catalog) Read(string catalogPath)
    {
       try {
          using var gzs = new GZipStream(new FileStream(catalogPath, FileMode.Open), CompressionMode.Decompress);
-         var jsonSerializer = new DataContractJsonSerializer(typeof(Model.CatalogData));
-         var catalogData = (Model.CatalogData) (jsonSerializer?.ReadObject(gzs) ??
+         var jsonSerializer = new DataContractJsonSerializer(typeof(Model.Catalog));
+         var catalog = (Model.Catalog) (jsonSerializer?.ReadObject(gzs) ??
             throw new IOException($"Katalogdatei '{catalogPath}' konnte nicht geladen werden."));
-         return (true, catalogData);
+         return (true, catalog);
       }
       catch (Exception) {
          return (false, new());

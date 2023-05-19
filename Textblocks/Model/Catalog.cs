@@ -5,7 +5,7 @@ using System.IO;
 // Class holding relevant data of a Textblock catalog.
 namespace cwsoft.Textblocks.Model;
 [Serializable()]
-internal class CatalogData
+internal class Catalog
 {
    #region // Properties, Constructors.
    // Public properties.
@@ -14,9 +14,9 @@ internal class CatalogData
    public List<Textblock> Textblocks { get; private set; }
 
    // Constructors.
-   public CatalogData() : this(string.Empty, new(), new()) { }
-   public CatalogData(string documentPath) : this(documentPath, new(), new()) { }
-   public CatalogData(string documentPath, List<Category> categories, List<Textblock> textblocks)
+   public Catalog() : this(string.Empty, new(), new()) { }
+   public Catalog(string documentPath) : this(documentPath, new(), new()) { }
+   public Catalog(string documentPath, List<Category> categories, List<Textblock> textblocks)
       => (DocumentPath, Categories, Textblocks) = (documentPath, categories, textblocks);
    #endregion
 

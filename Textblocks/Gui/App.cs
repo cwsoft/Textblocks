@@ -108,12 +108,12 @@ public partial class App: Form
       }
 
       // Update data bindings for category and textblock combobox data.
-      Cbx_Categories.DataSource = _catalogManager.Data.Categories.ToList();
-      Cbx_Textblocks.DataSource = _catalogManager.Data.Textblocks.ToList();
+      Cbx_Categories.DataSource = _catalogManager.Catalog.Categories.ToList();
+      Cbx_Textblocks.DataSource = _catalogManager.Catalog.Textblocks.ToList();
 
       // Update status infos and textblock data for actual catalog.
       if (isCatalogLoaded) {
-         StatusBarText = $"{_catalogManager.Data}";
+         StatusBarText = $"{_catalogManager.Catalog}";
          Men_CloseCatalog.Enabled = true;
          Properties.Settings.Default.LastUsedCatalog = catalogPath;
 

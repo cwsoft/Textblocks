@@ -19,7 +19,7 @@ internal class CatalogManager: IDisposable
 
    // Properties.
    public bool IsInitialized => _wordApp?.IsInitialized() ?? false;
-   public Model.CatalogData Data { get; private set; } = new();
+   public Model.Catalog Catalog { get; private set; } = new();
 
    // Access text property of optional form control element.
    public string InfoText {
@@ -83,18 +83,18 @@ internal class CatalogManager: IDisposable
          // Read catalog data from catalog file (.tbc) if exists.
          bool status;
          if (File.Exists(catalogPath) && File.GetLastWriteTime(catalogPath) > File.GetLastWriteTime(documentPath)) {
-            (status, Data) = CatalogReader.Read(catalogPath);
+            (status, Catalog) = CatalogReader.Read(catalogPath);
             if (status) {
-               return Data.Categories.Count > 0 && Data.Textblocks.Count > 0;
+               return Catalog.Categories.Count > 0 && Catalog.Textblocks.Count > 0;
             }
          }
 
          // Extract catalog data from ActiveDocument(.docx) if no valid catalog file (.tbc) yet exists.
-         (status, Data) = ExtractCatalogDataFromDocument(documentPath);
+         status = ExtractCatalogDataFromDocument(documentPath);
          if (status) {
             // Write catalog data as serialized gzipped catalog file (*.tbc) to speed up subsequent loading.
-            _ = CatalogWriter.Write(catalogPath, Data);
-            return Data.Categories.Count > 0 && Data.Textblocks.Count > 0;
+            _ = CatalogWriter.Write(catalogPath, Catalog);
+            return Catalog.Categories.Count > 0 && Catalog.Textblocks.Count > 0;
          }
       }
 
@@ -105,19 +105,19 @@ internal class CatalogManager: IDisposable
    public void CloseCatalog()
    {
       _ = _wordApp.CloseDocument();
-      Data = new();
+      Catalog = new();
       InfoText = "Bitte gültige Katalogdatei laden (Datei -> Katalog öffnen) oder Textblocks beenden.";
    }
 
    // Returns category object from Categories matching given Id or null.
-   public Model.Category? GetCategoryById(int id) => Data.Categories.Where(x => x.Id == id).FirstOrDefault();
+   public Model.Category? GetCategoryById(int id) => Catalog.Categories.Where(x => x.Id == id).FirstOrDefault();
 
    // Returns textblock object from Textblocks matching given Id or null.
-   public Model.Textblock? GetTextblockById(int id) => Data.Textblocks.Where(x => x.Id == id).FirstOrDefault();
+   public Model.Textblock? GetTextblockById(int id) => Catalog.Textblocks.Where(x => x.Id == id).FirstOrDefault();
 
    // Returns list of textblocks matching given CategoryId (categoryId:=0 => all categories).
    public List<Model.Textblock> GetTextblocksByCategoryId(int categoryId = 0)
-      => (categoryId == 0) ? Data.Textblocks : Data.Textblocks.Where(x => x.CategoryId == categoryId).ToList();
+      => (categoryId == 0) ? Catalog.Textblocks : Catalog.Textblocks.Where(x => x.CategoryId == categoryId).ToList();
 
    // Returns MS-Word document range of given textblock or null.
    public MSWord.Range? GetTextblockDocumentRange(Model.Textblock textblock)
@@ -129,23 +129,23 @@ internal class CatalogManager: IDisposable
    }
 
    // Returns filename or default value.
-   public static string GetFilenameOrDefault(string path, string @default = "")
+   public static string GetFilenameOrDefault(string path, string defaultValue = "")
    {
       try {
          return Path.GetFileName(path);
       }
       catch (Exception) {
-         return @default ?? string.Empty;
+         return defaultValue ?? string.Empty;
       }
    }
    #endregion
 
    #region // Private API
    // Extract data from catalog document (.docx) or read from catalog file (.tbc) and hold data as catalog data object in memory.
-   private (bool, Model.CatalogData) ExtractCatalogDataFromDocument(string documentPath)
+   private bool ExtractCatalogDataFromDocument(string documentPath)
    {
       // Create clean catalog data object for new data extraction.
-      var catalogData = new Model.CatalogData(documentPath);
+      Catalog = new Model.Catalog(documentPath);
 
       try {
          // Extract style names from document properties or use defaults.
@@ -156,7 +156,8 @@ internal class CatalogManager: IDisposable
          (int nbrCategories, int nbrTextblocks, int documentEnd) = (0, 0, _wordApp.ActiveDocument?.Content?.End ?? -1);
          foreach (MSWord.Range? rng in _wordApp.GetRangesByStyleName(textblockStyleName)) {
             if (rng is null) {
-               return (false, new Model.CatalogData(documentPath));
+               Catalog = new Model.Catalog(documentPath);
+               return false;
             }
 
             double completed = rng.Start / (double) documentEnd * 100;
@@ -165,12 +166,13 @@ internal class CatalogManager: IDisposable
             // Extract range and style name located just before actual textblock.
             MSWord.Range? previousRange = rng.Paragraphs[1]?.Previous(1)?.Range;
             if (previousRange is null) {
-               return (false, new Model.CatalogData(documentPath));
+               Catalog = new Model.Catalog(documentPath);
+               return false;
             }
             string previousStyleName = ((MSWord.Style) previousRange.get_Style()).NameLocal;
 
             if (previousStyleName == categoryStyleName) {
-               catalogData.Categories.Add(new() {
+               Catalog.Categories.Add(new() {
                   Id = ++nbrCategories,
                   Heading = previousRange.Text
                });
@@ -183,13 +185,13 @@ internal class CatalogManager: IDisposable
                   ? previousRange.Paragraphs[1].Previous(1).Range.End
                   : previousRange.End;
 
-               catalogData.Textblocks[nbrTextblocks - 1].RngEndPos = previousTextblockEnd;
-               catalogData.Textblocks[nbrTextblocks - 1].Content =
-                  _wordApp.ActiveDocument?.Range(catalogData.Textblocks[nbrTextblocks - 1].RngStartPos, previousTextblockEnd).Text ?? string.Empty;
+               Catalog.Textblocks[nbrTextblocks - 1].RngEndPos = previousTextblockEnd;
+               Catalog.Textblocks[nbrTextblocks - 1].Content =
+                  _wordApp.ActiveDocument?.Range(Catalog.Textblocks[nbrTextblocks - 1].RngStartPos, previousTextblockEnd).Text ?? string.Empty;
             }
 
             // Add all available information of actual textblock.
-            catalogData.Textblocks.Add(new() {
+            Catalog.Textblocks.Add(new() {
                Id = ++nbrTextblocks,
                CategoryId = nbrCategories,
                Heading = rng.Text,
@@ -198,28 +200,29 @@ internal class CatalogManager: IDisposable
          }
 
          // Update missing RngEndPos and Content of very last textblock.
-         if (catalogData.Textblocks.Count > 0) {
-            catalogData.Textblocks[nbrTextblocks - 1].RngEndPos = documentEnd;
-            catalogData.Textblocks[nbrTextblocks - 1].Content =
-               _wordApp.ActiveDocument?.Range(catalogData.Textblocks[nbrTextblocks - 1].RngStartPos, documentEnd).Text ?? string.Empty;
+         if (Catalog.Textblocks.Count > 0) {
+            Catalog.Textblocks[nbrTextblocks - 1].RngEndPos = documentEnd;
+            Catalog.Textblocks[nbrTextblocks - 1].Content =
+               _wordApp.ActiveDocument?.Range(Catalog.Textblocks[nbrTextblocks - 1].RngStartPos, documentEnd).Text ?? string.Empty;
          }
 
          // Add number of available textblocks for each category.
-         for (int i = 0; i < catalogData.Categories.Count; i++) {
-            catalogData.Categories[i].NbrTextblocksInCategory = catalogData.Textblocks.Where(x => x.CategoryId == i+1).ToList().Count;
+         for (int i = 0; i < Catalog.Categories.Count; i++) {
+            Catalog.Categories[i].NbrTextblocksInCategory = GetTextblocksByCategoryId(categoryId: i + 1).Count;
          }
 
          // Add summary category containg all available textblocks.
-         catalogData.Categories.Insert(0, new() {
+         Catalog.Categories.Insert(0, new() {
             Id = 0,
             Heading = "Alle Kategorien",
             NbrTextblocksInCategory = nbrTextblocks
          });
 
-         return (true, catalogData);
+         return true;
       }
       catch (Exception) {
-         return (false, new Model.CatalogData(documentPath));
+         Catalog = new Model.Catalog(documentPath);
+         return false;
       }
    }
 
