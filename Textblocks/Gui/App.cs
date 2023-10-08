@@ -35,23 +35,23 @@ public partial class App: Form
    // Initialize catalog manager, open last used catalog or reset App into defined state.
    private void App_Shown(object sender, EventArgs e)
    {
-      // Initialize catalog manager object.
-      StatusBarText = "Initialisiere Textblocks ... bitte warten";
+      // Try to initialize catalog manager. Shutdown App if MS-Word is not available on host system.
       using (new Helper.BlockingTask(Rtb_Preview, "Initialisiere Textblocks ... bitte warten")) {
+         StatusBarText = "Initialisiere Textblocks ... bitte warten";
          _catalogManager = new(infoControl: Rtb_Preview);
          if (!_catalogManager.IsInitialized) {
-            // Shutdown App if MS-Word is not accessible (e.g. not installed).
             ShutdownApp();
          }
       }
 
-      // Load last used catalog or reset App into defined state.
+      // Try autoloading last used catalog on startup.
       if (File.Exists(Properties.Settings.Default.LastUsedCatalog)) {
          LoadCatalog(catalogPath: Properties.Settings.Default.LastUsedCatalog);
+         return;
       }
-      else {
-         ResetCatalog();
-      }
+
+      // Reset App into defined state if no catalog was loaded.
+      ResetApp();
    }
    #endregion
 
@@ -71,8 +71,9 @@ public partial class App: Form
       }
    }
 
-   // Close actual catalog and update status infos.
-   private void ResetCatalog()
+   // Reset App into defined state.
+   // Closes actual catalog, releases data binding and updates status infos.
+   private void ResetApp()
    {
       // Close actual catalog and release combobox data binding.
       _catalogManager?.CloseCatalog();
@@ -85,10 +86,10 @@ public partial class App: Form
 
       // Update menu entries and status infos.
       Men_CloseCatalog.Enabled = false;
-      StatusBarText = "Keine gültige Katalogdatei geladen.";
       InfoText = $"Bitte gültige Katalogdatei laden (Datei -> Katalog öffnen) oder Textblocks beenden.";
+      StatusBarText = "Keine gültige Katalogdatei geladen.";
 
-      // Don't autoload actual catalog on next App start if catalog was reset.
+      // Remove actually closed catalog from beeing autoloaded on next App start.
       Properties.Settings.Default.LastUsedCatalog = string.Empty;
    }
 
@@ -100,10 +101,10 @@ public partial class App: Form
       }
 
       // Load catalog and extract categories and textblocks.
-      InfoText = $"Lade Katalog '{Catalog.CatalogManager.GetFilenameOrDefault(catalogPath)}' ... bitte warten";
-      StatusBarText = $"Lade '{catalogPath}'";
       bool isCatalogLoaded = false;
       using (new Helper.BlockingTask()) {
+         InfoText = $"Lade Katalog '{Catalog.CatalogManager.GetFilenameOrDefault(catalogPath)}' ... bitte warten";
+         StatusBarText = $"Lade '{Catalog.CatalogManager.GetFilenameOrDefault(catalogPath)}'";
          isCatalogLoaded = _catalogManager.OpenCatalog(catalogPath);
       }
 
@@ -124,7 +125,7 @@ public partial class App: Form
 
       // Actual catalog is empty or invalid so we reset the App into a defined state.
       if (!isCatalogLoaded) {
-         ResetCatalog();
+         ResetApp();
          InfoText = $"Katalog ungültig. Bitte gültige Katalogdatei laden oder Textblocks beenden.";
          StatusBarText = $"Ungültiger Katalog: '{catalogPath}'";
 
@@ -153,7 +154,7 @@ public partial class App: Form
       catch (System.Runtime.InteropServices.COMException) {
          // Connection to MS-Word lost (e.g. killed process).
          // Reset app into defined state and let user decide how to proceed.
-         ResetCatalog();
+         ResetApp();
          InfoText = $"Verbindung zu MS-Word wurde unterbrochen. Katalogdatei erneut laden oder Textblocks beenden.";
          StatusBarText = "Verbindung zu MS-Word wurde unterbrochen";
       }
@@ -373,7 +374,7 @@ public partial class App: Form
    }
 
    // Close actual catalog.
-   private void Men_CloseCatalog_Click(object sender, EventArgs e) => ResetCatalog();
+   private void Men_CloseCatalog_Click(object sender, EventArgs e) => ResetApp();
 
    // Quit App.
    private void Men_Quit_Click(object sender, EventArgs e) => Close();
